@@ -4,12 +4,6 @@
 export *
 
 class Glow
-  shader: -> [[
-    vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
-      return color;
-    }
-  ]]
-
   new: (@scale=0.5) =>
     @canvas = g.newCanvas g.getWidth! * @scale, g.getHeight! * @scale
     -- @canvas\setFilter "nearest", "nearest"
@@ -95,3 +89,4 @@ class Projector
     @effect\send "R", @radius
     g.draw @canvas, 0,0
     g.setPixelEffect!
+

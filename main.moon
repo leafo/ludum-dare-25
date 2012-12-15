@@ -33,12 +33,29 @@ approach_dir = do
     vec[1] = cos new_dir
     vec[2] = sin new_dir
 
+
+class Bullet extends Box
+  size: 3
+  alive: true
+
+  new: (@vel, x, y) =>
+    super x,y, @size, @size
+
+  update: (dt, world) =>
+    @move unpack @vel * dt
+    world.viewport\touches_box @
+
+  draw: =>
+    g.rectangle "line", @x, @y, @w, @h
+
 class Gun
   w: 2
   h: 10
 
   ox: 0
   oy: 0
+
+  speed: 100
 
   new: (@tank) =>
     @dir = Vec2d 1,0
@@ -56,6 +73,19 @@ class Gun
 
   shoot: =>
     return if @seq
+
+    x = @tank.x + @dir.x * @h
+    y = @tank.y + @dir.y * @h
+
+    vel = @dir * @speed
+
+    if @tank.moving
+      new_vel = vel + @tank.dir * @tank.speed
+      unless new_vel\len! < @speed
+        vel = new_vel
+
+    @tank.world.entities\add Bullet, vel, x,y
+
     @seq = Sequence ->
       tween @, 0.1, ox: -2
       tween @, 0.2, ox: 0
@@ -72,9 +102,11 @@ class Tank
     @gun = Gun @
 
   update: (dt) =>
+    @moving = false
     @gun\update dt if @gun
 
   move: (dt, dir) =>
+    @moving = true
     approach_dir @dir, dir, @spin * dt
 
     @x += @dir[1] * @speed * dt
@@ -127,10 +159,12 @@ class World
     @viewport = EffectViewport scale: 3
     @player.world = @
 
+    @entities = ReuseList!
+
     @ground_project = Projector 1.2
     @entity_project = Projector 1.3
 
-    @blur_project = Glow @blur_scale
+    -- @blur_project = Glow @blur_scale
 
     sprite = Spriter "img/tiles.png", 16
     tiles = setmetatable { {tid: 0} }, { __index: => @[1] }
@@ -148,6 +182,7 @@ class World
   draw_entities: =>
     @viewport\apply!
     @player\draw dt
+    @entities\draw!
     @viewport\pop!
 
   draw: =>
@@ -161,8 +196,9 @@ class World
       @entity_project\render -> @draw_entities!
 
     g.setColor 0,0,0
-    g.rectangle "fill", 0, 0, g.getWidth!, 100
-    g.rectangle "fill", 0, g.getHeight! - 100, g.getWidth!, 100
+    hud_height = 80
+    g.rectangle "fill", 0, 0, g.getWidth!, hud_height
+    g.rectangle "fill", 0, g.getHeight! - hud_height, g.getWidth!, hud_height
     g.setColor 255,255,255
 
     g.scale 2
@@ -171,6 +207,7 @@ class World
   update: (dt) =>
     @map\update dt
     @player\update dt
+    @entities\update dt, @
 
 class Game
   new: =>
@@ -178,7 +215,11 @@ class Game
     @world = World @player
 
   draw: => @world\draw!
-  update: (dt) => @world\update dt
+  update: (dt) =>
+    if mouse.isDown "l"
+      @player.gun\shoot!
+
+    @world\update dt
 
   on_key: (key) =>
     with @world
@@ -188,7 +229,6 @@ class Game
     false
 
   mousepressed: (x,y) =>
-    @player.gun\shoot!
 
 export fonts = {}
 load_font = (img, chars)->
