@@ -1,6 +1,8 @@
 
 require "lovekit.all"
 
+require "project"
+
 {graphics: g, :timer, :mouse} = love
 {floor: f} = math
 
@@ -121,24 +123,34 @@ class World
   new: (@player) =>
     @viewport = EffectViewport scale: 3
     @player.world = @
+    @project = Projector!
 
     sprite = Spriter "img/tiles.png", 16
     tiles = setmetatable { {tid: 0} }, { __index: => @[1] }
-    @map = with TileMap 100, 100
+    @map = with TileMap 32, 32
       .sprite = sprite
       \add_tiles tiles
 
+    @map_box = Box 0,0, @map.real_width, @map.real_height
+
   draw: =>
-    @viewport\apply!
-    @map\draw @viewport
-    @player\draw dt
-    @viewport\pop!
+    @project\render ->
+      @viewport\center_on_pt @player.x, @player.y, @map_box
+      @viewport\apply!
+      @map\draw @viewport
+      @player\draw dt
+      @viewport\pop!
+
+    g.setColor 0,0,0
+    g.rectangle "fill", 0, 0, g.getWidth!, 100
+    g.rectangle "fill", 0, g.getHeight! - 100, g.getWidth!, 100
+    g.setColor 255,255,255
 
     g.scale 2
     p tostring(timer.getFPS!), 2, 2
 
   update: (dt) =>
-    -- @map?\update dt
+    @map\update dt
     @player\update dt
 
 class Game
@@ -148,6 +160,10 @@ class Game
 
   draw: => @world\draw!
   update: (dt) => @world\update dt
+
+  on_key: (key) =>
+    if key == " "
+      @world.project.disabled = not @world.project.disabled
 
   mousepressed: (x,y) =>
     @player.gun\shoot!
