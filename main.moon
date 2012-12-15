@@ -117,22 +117,37 @@ class Player extends Tank
       aim_dir = mpos - Vec2d(@x, @y)
       approach_dir @gun.dir, aim_dir, dt * @spin
 
-class Game
-  new: =>
+class World
+  new: (@player) =>
     @viewport = EffectViewport scale: 3
-    @player = Player 100, 100, @
+    @player.world = @
+
+    sprite = Spriter "img/tiles.png", 16
+    tiles = setmetatable { {tid: 0} }, { __index: => @[1] }
+    @map = with TileMap 100, 100
+      .sprite = sprite
+      \add_tiles tiles
 
   draw: =>
     @viewport\apply!
+    @map\draw @viewport
     @player\draw dt
-    p tostring(timer.getFPS!), 2, 2
     @viewport\pop!
 
+    g.scale 2
+    p tostring(timer.getFPS!), 2, 2
+
   update: (dt) =>
+    -- @map?\update dt
     @player\update dt
 
-  keypressed: (key) =>
-    print "key: #{key}"
+class Game
+  new: =>
+    @player = Player 100, 100, @
+    @world = World @player
+
+  draw: => @world\draw!
+  update: (dt) => @world\update dt
 
   mousepressed: (x,y) =>
     @player.gun\shoot!
