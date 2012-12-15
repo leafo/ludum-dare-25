@@ -3,6 +3,40 @@
 
 export *
 
+class Glow
+  shader: -> [[
+    vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
+      return color;
+    }
+  ]]
+
+  new: (@scale=0.5) =>
+    @canvas = g.newCanvas g.getWidth! * @scale, g.getHeight! * @scale
+    -- @canvas\setFilter "nearest", "nearest"
+    @effect = g.newPixelEffect @shader!
+
+  render: (fn) =>
+    old_canvas = g.getCanvas!
+
+    g.setCanvas @canvas
+    @canvas\clear 0,0,0,0
+    g.push!
+    g.scale @scale, @scale
+    fn!
+    g.pop!
+    g.setCanvas old_canvas
+
+    fn!
+    g.setColor 255,255,255,100
+
+    g.push!
+    g.scale 1/@scale, 1/@scale
+    g.draw @canvas, 0,0
+    g.pop!
+
+    g.setColor 255,255,255,255
+
+
 class Projector
   shader: -> [[
     extern number R;
@@ -50,10 +84,12 @@ class Projector
     @effect = g.newPixelEffect @shader!
 
   render: (fn) =>
+    old_canvas = g.getCanvas!
+
     g.setCanvas @canvas
     @canvas\clear 0,0,0,0
     fn!
-    g.setCanvas!
+    g.setCanvas old_canvas
 
     g.setPixelEffect @effect unless @disabled
     @effect\send "R", @radius

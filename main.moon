@@ -120,12 +120,17 @@ class Player extends Tank
       approach_dir @gun.dir, aim_dir, dt * @spin
 
 class World
+  disable_project: false
+  blur_scale: 0.2
+
   new: (@player) =>
     @viewport = EffectViewport scale: 3
     @player.world = @
 
     @ground_project = Projector 1.2
     @entity_project = Projector 1.3
+
+    @blur_project = Glow @blur_scale
 
     sprite = Spriter "img/tiles.png", 16
     tiles = setmetatable { {tid: 0} }, { __index: => @[1] }
@@ -135,17 +140,25 @@ class World
 
     @map_box = Box 0,0, @map.real_width, @map.real_height
 
-  draw: =>
-    @ground_project\render ->
-      @viewport\center_on_pt @player.x, @player.y, @map_box
-      @viewport\apply!
-      @map\draw @viewport
-      @viewport\pop!
+  draw_ground: =>
+    @viewport\apply!
+    @map\draw @viewport
+    @viewport\pop!
 
-    @entity_project\render ->
-      @viewport\apply!
-      @player\draw dt
-      @viewport\pop!
+  draw_entities: =>
+    @viewport\apply!
+    @player\draw dt
+    @viewport\pop!
+
+  draw: =>
+    @viewport\center_on_pt @player.x, @player.y, @map_box
+
+    if @disable_project
+      @draw_ground!
+      @draw_entities!
+    else
+      @ground_project\render -> @draw_ground!
+      @entity_project\render -> @draw_entities!
 
     g.setColor 0,0,0
     g.rectangle "fill", 0, 0, g.getWidth!, 100
@@ -159,13 +172,6 @@ class World
     @map\update dt
     @player\update dt
 
-    if love.keyboard.isDown "up"
-      @entity_project.radius += dt
-      print @entity_project.radius
-    if love.keyboard.isDown "down"
-      @entity_project.radius -= dt
-      print @entity_project.radius
-
 class Game
   new: =>
     @player = Player 100, 100, @
@@ -175,8 +181,11 @@ class Game
   update: (dt) => @world\update dt
 
   on_key: (key) =>
-    -- if key == " "
-    --   @world.project.disabled = not @world.project.disabled
+    with @world
+      switch key
+        when " "
+          .disable_project = not .disable_project
+    false
 
   mousepressed: (x,y) =>
     @player.gun\shoot!
