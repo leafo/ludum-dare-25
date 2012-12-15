@@ -39,8 +39,10 @@ class Projector
 
       vec2 source = (vec2(long, lat) / PI * 2 + 1) / 2;
 
+      float darken = min(1, 1.1 - pow(length(pos) / R, 5));
+
       vec4 final = Texel(tex, source);
-      return vec4(final.rgb, 1.0);
+      return vec4(final.rgb * darken, 1.0);
     }
   ]]
 
