@@ -11,6 +11,8 @@ p = (str, ...) -> g.print str\lower!, ...
 
 import cos,sin,abs from math
 
+local sprite
+
 approach_dir = do
   PI = math.pi
   (vec, dir, delta) ->
@@ -54,11 +56,12 @@ class Bullet extends Box
   __tostring: => "Bullet<#{Box.__tostring self}>"
 
 class Gun
-  w: 2
-  h: 10
+  ox: -2
+  oy: -2
 
-  ox: 0
-  oy: 0
+  w: 9 -- to tip of gun from origin
+
+  sprite: "24,12,11,4"
 
   speed: 130
 
@@ -68,8 +71,9 @@ class Gun
   draw: =>
     g.push!
     g.rotate @dir\radians!
-    g.setColor 180, 180, 180
-    g.rectangle "fill", -1 + @ox, -1 + @oy, f(@h), 2
+
+    -- what happens here
+    sprite\draw_cell @sprite, @ox, @oy
     g.pop!
 
   update: (dt) =>
@@ -83,8 +87,8 @@ class Gun
   shoot: =>
     return if @seq
 
-    x = @tank.x + @dir.x * @h
-    y = @tank.y + @dir.y * @h
+    x = @tank.x + @dir.x * @w
+    y = @tank.y + @dir.y * @w
 
     vel = @dir * @speed
 
@@ -96,16 +100,16 @@ class Gun
     @tank.world.entities\add Bullet, vel, x,y, @tank
 
     @seq = Sequence ->
-      tween @, 0.1, ox: -2
-      tween @, 0.2, ox: 0
+      ox = @ox
+      tween @, 0.1, ox: ox - 2
+      tween @, 0.2, ox: ox
 
 class Tank
-  w: 10
-  h: 12
+  ox: -6
+  oy: -6
+  sprite: "8,8,14,12"
 
   size: 8
-
-  color: {255,255,255}
 
   speed: 80
   spin: 10 -- rads a second
@@ -151,9 +155,6 @@ class Tank
     @box.y = @y - hsize
 
   draw: =>
-    hw = f @w/2
-    hh = f @h/2
-
     @effects\before!
 
     g.push!
@@ -163,20 +164,15 @@ class Tank
     g.push!
     g.rotate @dir\radians!
 
-    g.setColor @color
-    g.rectangle "fill", -hh, -hw, @h, @w
+    sprite\draw_cell @sprite, @ox, @oy
 
-    g.setColor 255, 100, 100
-    g.rectangle "fill", f(hh/3), -1, 2,2
     g.pop!
 
     @gun\draw! if @gun
 
-    g.setColor 255, 255, 255
     g.pop!
 
     @effects\after!
-
     -- @box\outline!
 
 class Player extends Tank
@@ -256,10 +252,10 @@ class World
 
     -- @blur_project = Glow @blur_scale
 
-    sprite = Spriter "img/tiles.png", 16
+    tile_sprite = Spriter "img/tiles.png", 16
     tiles = setmetatable { {tid: 0} }, { __index: => @[1] }
     @map = with TileMap 32, 32
-      .sprite = sprite
+      .sprite = tile_sprite
       \add_tiles tiles
 
     @map_box = Box 0,0, @map.real_width, @map.real_height
@@ -349,7 +345,7 @@ load_font = (img, chars)->
 
 love.load = ->
   g.setBackgroundColor 61/2, 52/2, 47/2
-
+  sprite = Spriter "img/sprite.png"
   fonts.main = load_font "img/font.png", [[ abcdefghijklmnopqrstuvwxyz-1234567890!.,:;'"?$&]]
 
   g.setFont fonts.main
