@@ -32,6 +32,7 @@ approach_dir = do
 
     vec[1] = cos new_dir
     vec[2] = sin new_dir
+    new_dir == target
 
 
 class Bullet extends Box
@@ -55,7 +56,7 @@ class Gun
   ox: 0
   oy: 0
 
-  speed: 100
+  speed: 120
 
   new: (@tank) =>
     @dir = Vec2d 1,0
@@ -70,6 +71,10 @@ class Gun
   update: (dt) =>
     if @seq and not @seq\update dt
       @seq = nil
+
+  aim_to: (dt, dir) =>
+    spin = @spin or @tank.spin
+    approach_dir @dir, dir, dt * spin
 
   shoot: =>
     return if @seq
@@ -93,6 +98,8 @@ class Gun
 class Tank
   w: 10
   h: 12
+
+  color: {255,255,255}
 
   speed: 80
   spin: 10 -- rads a second
@@ -123,7 +130,8 @@ class Tank
     g.push!
     g.rotate @dir\radians!
 
-    g.rectangle "fill", -hh, -hw, @h, @w -- this is confusing..
+    g.setColor @color
+    g.rectangle "fill", -hh, -hw, @h, @w
 
     g.setColor 255, 100, 100
     g.rectangle "fill", f(hh/3), -1, 2,2
@@ -151,6 +159,34 @@ class Player extends Tank
       aim_dir = mpos - Vec2d(@x, @y)
       approach_dir @gun.dir, aim_dir, dt * @spin
 
+class Enemy extends Tank
+  color: {255, 200, 200}
+  spin: 4
+  speed: 20
+
+  new: (...) =>
+    super ...
+    @ai = Sequence ->
+      dir = Vec2d.random!
+      during 0.5, (dt) ->
+        @move dt, dir
+
+      dir = Vec2d.random!
+      during 0.5, (dt) ->
+        if @gun\aim_to dt, dir
+          "cancel"
+
+      @gun\shoot dt, @world
+      wait 1.0
+
+      again!
+
+  update: (dt, world) =>
+    @world = world
+    @ai\update dt
+    super dt
+    true
+
 class World
   disable_project: false
   blur_scale: 0.2
@@ -173,6 +209,9 @@ class World
       \add_tiles tiles
 
     @map_box = Box 0,0, @map.real_width, @map.real_height
+
+    -- create some enemies
+    @entities\add Enemy, 150, 150
 
   draw_ground: =>
     @viewport\apply!
