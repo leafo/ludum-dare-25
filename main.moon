@@ -35,6 +35,9 @@ class Gun
   w: 2
   h: 10
 
+  ox: 0
+  oy: 0
+
   new: (@tank) =>
     @dir = Vec2d 1,0
 
@@ -42,10 +45,18 @@ class Gun
     g.push!
     g.rotate @dir\radians!
     g.setColor 180, 180, 180
-    g.rectangle "fill", -1, -1, f(@h), 2
+    g.rectangle "fill", -1 + @ox, -1 + @oy, f(@h), 2
     g.pop!
 
   update: (dt) =>
+    if @seq and not @seq\update dt
+      @seq = nil
+
+  shoot: =>
+    return if @seq
+    @seq = Sequence ->
+      tween @, 0.1, ox: -2
+      tween @, 0.2, ox: 0
 
 class Tank
   w: 10
@@ -59,7 +70,7 @@ class Tank
     @gun = Gun @
 
   update: (dt) =>
-    -- @gun\update! if @gun
+    @gun\update dt if @gun
 
   move: (dt, dir) =>
     approach_dir @dir, dir, @spin * dt
@@ -96,6 +107,7 @@ class Player extends Tank
     super x,y
 
   update: (dt) =>
+    super dt
     dir = mover!
     if not dir\is_zero!
       @move dt, dir
@@ -123,8 +135,7 @@ class Game
     print "key: #{key}"
 
   mousepressed: (x,y) =>
-    print "mouse", x,y
-
+    @player.gun\shoot!
 
 export fonts = {}
 load_font = (img, chars)->
