@@ -3,6 +3,7 @@ require "lovekit.all"
 
 require "project"
 
+{:effects} = lovekit
 {graphics: g, :timer, :mouse} = love
 {floor: f} = math
 
@@ -38,8 +39,9 @@ approach_dir = do
 class Bullet extends Box
   size: 3
   alive: true
+  is_bullet: true
 
-  new: (@vel, x, y) =>
+  new: (@vel, x, y, @tank) =>
     super x,y, @size, @size
 
   update: (dt, world) =>
@@ -58,7 +60,7 @@ class Gun
   ox: 0
   oy: 0
 
-  speed: 120
+  speed: 130
 
   new: (@tank) =>
     @dir = Vec2d 1,0
@@ -91,7 +93,7 @@ class Gun
       unless new_vel\len! < @speed
         vel = new_vel
 
-    @tank.world.entities\add Bullet, vel, x,y
+    @tank.world.entities\add Bullet, vel, x,y, @tank
 
     @seq = Sequence ->
       tween @, 0.1, ox: -2
@@ -114,9 +116,26 @@ class Tank
     @gun = Gun @
     @update_box!
 
+    if @effects
+      @effects\clear @
+    else
+      @effects = EffectList @
+
   update: (dt) =>
     @moving = false
     @gun\update dt if @gun
+    @effects\update dt
+
+    if @hit_seq
+      @hit_seq\update dt
+      @update_box!
+
+  shove: (box, dist=10, dur=0.3) =>
+    @effects\add effects.Flash!
+    @hit_seq = Sequence ->
+      dir = box\vector_to(@box)\normalized! * dist
+      tween @, dur, x: @x + dir.x, y: @y + dir.y
+      @hit_seq = nil
 
   move: (dt, dir) =>
     @moving = true
@@ -134,6 +153,8 @@ class Tank
   draw: =>
     hw = f @w/2
     hh = f @h/2
+
+    @effects\before!
 
     g.push!
     g.translate @x, @y
@@ -154,7 +175,9 @@ class Tank
     g.setColor 255, 255, 255
     g.pop!
 
-    @box\outline!
+    @effects\after!
+
+    -- @box\outline!
 
 class Player extends Tank
   mover = make_mover "w", "s", "a", "d"
@@ -164,10 +187,8 @@ class Player extends Tank
 
   update: (dt) =>
     super dt
-    if @hit_seq
-      @hit_seq\update dt
-      @update_box!
-    else
+
+    unless @hit_seq
       dir = mover!
       if not dir\is_zero!
         @move dt, dir
@@ -181,10 +202,7 @@ class Player extends Tank
     return if @hit_seq
     if thing.is_enemy
       @world.viewport\shake!
-      @hit_seq = Sequence ->
-        dir = thing.box\vector_to(@box)\normalized! * 10
-        tween @, 0.3, x: @x + dir.x, y: @y + dir.y
-        @hit_seq = nil
+      @shove thing.box
 
 class Enemy extends Tank
   is_enemy: true
@@ -208,6 +226,11 @@ class Enemy extends Tank
       wait 1.0
 
       again!
+
+  take_hit: (thing) =>
+    if thing.is_bullet
+      thing.alive = false
+      @shove thing, 5, 0.2
 
   update: (dt, world) =>
     @world = world
@@ -293,6 +316,11 @@ class World
     for thing in *@collide\get_touching @player.box
       @player\take_hit thing
 
+    for enemy in *@entities
+      continue unless enemy.is_enemy
+      for thing in *@collide\get_touching enemy.box
+        enemy\take_hit thing
+
 class Game
   new: =>
     @player = Player 100, 100, @
@@ -309,9 +337,7 @@ class Game
     with @world
       switch key
         when " "
-          print "shaking"
-          .viewport\shake!
-          -- .disable_project = not .disable_project
+          .disable_project = not .disable_project
     false
 
   mousepressed: (x,y) =>
