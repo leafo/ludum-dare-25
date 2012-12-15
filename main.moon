@@ -49,6 +49,8 @@ class Bullet extends Box
   draw: =>
     g.rectangle "line", @x, @y, @w, @h
 
+  __tostring: => "Bullet<#{Box.__tostring self}>"
+
 class Gun
   w: 2
   h: 10
@@ -99,14 +101,18 @@ class Tank
   w: 10
   h: 12
 
+  size: 8
+
   color: {255,255,255}
 
   speed: 80
   spin: 10 -- rads a second
 
   new: (@x, @y) =>
+    @box = Box 0,0, @size, @size
     @dir = Vec2d 1,0
     @gun = Gun @
+    @update_box!
 
   update: (dt) =>
     @moving = false
@@ -118,6 +124,12 @@ class Tank
 
     @x += @dir[1] * @speed * dt
     @y += @dir[2] * @speed * dt
+    @update_box!
+
+  update_box: =>
+    hsize = @size/2
+    @box.x = @x - hsize
+    @box.y = @y - hsize
 
   draw: =>
     hw = f @w/2
@@ -142,6 +154,8 @@ class Tank
     g.setColor 255, 255, 255
     g.pop!
 
+    @box\outline!
+
 class Player extends Tank
   mover = make_mover "w", "s", "a", "d"
 
@@ -150,16 +164,30 @@ class Player extends Tank
 
   update: (dt) =>
     super dt
-    dir = mover!
-    if not dir\is_zero!
-      @move dt, dir
+    if @hit_seq
+      @hit_seq\update dt
+      @update_box!
+    else
+      dir = mover!
+      if not dir\is_zero!
+        @move dt, dir
 
     mpos = Vec2d @world.viewport\unproject mouse.getPosition!
     if @gun
       aim_dir = mpos - Vec2d(@x, @y)
       approach_dir @gun.dir, aim_dir, dt * @spin
 
+  take_hit: (thing) =>
+    return if @hit_seq
+    if thing.is_enemy
+      @world.viewport\shake!
+      @hit_seq = Sequence ->
+        dir = thing.box\vector_to(@box)\normalized! * 10
+        tween @, 0.3, x: @x + dir.x, y: @y + dir.y
+        @hit_seq = nil
+
 class Enemy extends Tank
+  is_enemy: true
   color: {255, 200, 200}
   spin: 4
   speed: 20
@@ -187,6 +215,8 @@ class Enemy extends Tank
     super dt
     true
 
+  __tostring: => "Enemy<#{@box}>"
+
 class World
   disable_project: false
   blur_scale: 0.2
@@ -194,6 +224,7 @@ class World
   new: (@player) =>
     @viewport = EffectViewport scale: 3
     @player.world = @
+    @collide = UniformGrid!
 
     @entities = ReuseList!
 
@@ -244,9 +275,23 @@ class World
     p tostring(timer.getFPS!), 2, 2
 
   update: (dt) =>
+    @viewport\update dt
     @map\update dt
     @player\update dt
     @entities\update dt, @
+
+    -- respond to collision
+    @collide\clear!
+    @collide\add @player.box, @player
+    for e in *@entities
+      if e.alive != false
+        if e.box
+          @collide\add e.box, e
+        else
+          @collide\add e
+
+    for thing in *@collide\get_touching @player.box
+      @player\take_hit thing
 
 class Game
   new: =>
@@ -264,7 +309,9 @@ class Game
     with @world
       switch key
         when " "
-          .disable_project = not .disable_project
+          print "shaking"
+          .viewport\shake!
+          -- .disable_project = not .disable_project
     false
 
   mousepressed: (x,y) =>
