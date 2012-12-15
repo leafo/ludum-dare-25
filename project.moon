@@ -4,17 +4,15 @@
 export *
 
 class Projector
-  shader: [[
-    extern number screen_width;
-    extern number screen_height;
+  shader: -> [[
+    extern number R;
 
     float PI = 3.14159265358979323846264;
-
     vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
       vec2 pos = (st - 0.5) * 2;
       pos.x = pos.x * 800/600;
 
-      float R = 1.2;
+      // float R = 1.2;
 
       if (length(pos) > R) {
         return vec4(0);
@@ -42,22 +40,22 @@ class Projector
       float darken = min(1, 1.1 - pow(length(pos) / R, 5));
 
       vec4 final = Texel(tex, source);
-      return vec4(final.rgb * darken, 1.0);
+      return vec4(final.rgb * darken, final.a);
     }
   ]]
 
-  new: =>
+  new: (@radius=1.2) =>
     @canvas = g.newCanvas!
     @canvas\setFilter "nearest", "nearest"
-    @effect = g.newPixelEffect @shader
-    -- @effect\send "screen_width", g.getWidth!
-    -- @effect\send "screen_height", g.getHeight!
+    @effect = g.newPixelEffect @shader!
 
   render: (fn) =>
     g.setCanvas @canvas
+    @canvas\clear 0,0,0,0
     fn!
     g.setCanvas!
 
     g.setPixelEffect @effect unless @disabled
+    @effect\send "R", @radius
     g.draw @canvas, 0,0
     g.setPixelEffect!

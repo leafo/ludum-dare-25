@@ -123,7 +123,9 @@ class World
   new: (@player) =>
     @viewport = EffectViewport scale: 3
     @player.world = @
-    @project = Projector!
+
+    @ground_project = Projector 1.2
+    @entity_project = Projector 1.3
 
     sprite = Spriter "img/tiles.png", 16
     tiles = setmetatable { {tid: 0} }, { __index: => @[1] }
@@ -134,10 +136,14 @@ class World
     @map_box = Box 0,0, @map.real_width, @map.real_height
 
   draw: =>
-    @project\render ->
+    @ground_project\render ->
       @viewport\center_on_pt @player.x, @player.y, @map_box
       @viewport\apply!
       @map\draw @viewport
+      @viewport\pop!
+
+    @entity_project\render ->
+      @viewport\apply!
       @player\draw dt
       @viewport\pop!
 
@@ -153,6 +159,13 @@ class World
     @map\update dt
     @player\update dt
 
+    if love.keyboard.isDown "up"
+      @entity_project.radius += dt
+      print @entity_project.radius
+    if love.keyboard.isDown "down"
+      @entity_project.radius -= dt
+      print @entity_project.radius
+
 class Game
   new: =>
     @player = Player 100, 100, @
@@ -162,8 +175,8 @@ class Game
   update: (dt) => @world\update dt
 
   on_key: (key) =>
-    if key == " "
-      @world.project.disabled = not @world.project.disabled
+    -- if key == " "
+    --   @world.project.disabled = not @world.project.disabled
 
   mousepressed: (x,y) =>
     @player.gun\shoot!
