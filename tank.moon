@@ -1,6 +1,6 @@
 
 {:effects} = lovekit
-{graphics: g, :timer, :mouse} = love
+{graphics: g, :timer, :mouse, :keyboard} = love
 
 import approach_dir from require "util"
 
@@ -96,16 +96,18 @@ class Tank
     -- @box\outline!
 
 class Player extends Tank
+  suck_radius: 50
   mover = make_mover "w", "s", "a", "d"
 
   new: (x, y, @world) =>
     super x,y
+    @held_energy = {}
 
   loadout: =>
     @mount_gun MachineGun, 0, -4
     @mount_gun MachineGun, 0, 4
 
-  update: (dt) =>
+  update: (dt, world) =>
     super dt
 
     unless @hit_seq
@@ -113,13 +115,36 @@ class Player extends Tank
       if not dir\is_zero!
         @move dt, dir
 
-    mpos = Vec2d @world.viewport\unproject mouse.getPosition!
+    mpos = Vec2d world.viewport\unproject mouse.getPosition!
     @aim_to dt, mpos
+
+    @sucking = keyboard.isDown " "
+    if @sucking
+      radius = @suck_radius_box!
+      for e in *world.collide\get_touching radius
+        if e.is_energy and not e.gravity_parent
+          table.insert @held_energy, e
+          e.gravity_parent = @
+    else
+      for e in *@held_energy
+        e.gravity_parent = nil
+      @held_energy = {}
 
   take_hit: (thing) =>
     return if @hit_seq
     if thing.is_enemy
       @world.viewport\shake!
       @shove thing.box
+
+  draw: =>
+    super!
+    if @sucking
+      @suck_radius_box!\outline!
+
+  suck_radius_box: =>
+    half = @suck_radius / 2
+    Box @x - half, @y - half, @suck_radius, @suck_radius
+
+  __tostring: => "Player<>"
 
 

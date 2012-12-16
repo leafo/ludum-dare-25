@@ -7,6 +7,7 @@ require "particles"
 require "guns"
 require "tank"
 require "enemies"
+require "pickup"
 
 require "lovekit.screen_snap"
 
@@ -109,7 +110,7 @@ class World
   update: (dt) =>
     @viewport\update dt
     @map\update dt
-    @player\update dt
+    @player\update dt, @
     @entities\update dt, @
     @particles\update dt, @
 
@@ -162,7 +163,7 @@ class Game
             snapper = nil
           else
             snapper = ScreenSnap!
-        when " "
+        when "p"
           @paused = not @paused
         when "x"
           .disable_project = not .disable_project
@@ -170,6 +171,8 @@ class Game
 
   mousepressed: (x,y) =>
     x, y = @world.viewport\unproject x,y
+    @world.entities\add Energy, x,y
+
     -- print "boom: #{x}, #{y}"
     -- @world.particles\add Explosion @world, x,y
 
