@@ -85,21 +85,20 @@ class World
 
     @draw_background!
 
-    @colors\render ->
-      if @disable_project
-        @draw_ground!
-        @draw_entities!
-      else
+    if @disable_project
+      @draw_ground!
+      @draw_entities!
+    else
+      @colors\render ->
         @ground_project\render -> @draw_ground!
         @entity_project\render -> @draw_entities!
 
-
     g.setColor 0,0,0
     hud_height = 80
-    g.rectangle "fill", 0, 0, g.getWidth!, hud_height
+    -- g.rectangle "fill", 0, 0, g.getWidth!, hud_height
 
-    g.rectangle "fill", 0, g.getHeight! - hud_height,
-      g.getWidth!, hud_height
+    -- g.rectangle "fill", 0, g.getHeight! - hud_height,
+    --   g.getWidth!, hud_height
 
     g.setColor 255,255,255
 

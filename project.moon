@@ -38,7 +38,8 @@ class Projector
     float PI = 3.14159265358979323846264;
     vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
       vec2 pos = (st - 0.5) * 2;
-      pos.x = pos.x * 800/600;
+      pos.x = pos.x * 1.3;
+      pos.y = pos.y / 1.2;
 
       // float R = 1.2;
 
