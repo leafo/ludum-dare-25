@@ -106,7 +106,9 @@ class World
     h = h/3
 
     box_text "Energy: #{@energy_count or 0}", 10, 10, false
-    box_text "Score: #{@player.score or 0}", 10, 20, false
+
+    score = f @player.display_score or @player.score or 0
+    box_text "Score: #{score}", 10, 20, false
 
     @level_progress\draw w - 10 - @level_progress.w, 7
 
@@ -114,7 +116,6 @@ class World
       box_text "Press E", w - 10, 20, 1.0
 
     g.pop!
-
 
   draw: =>
     @viewport\center_on_pt @player.x, @player.y, @map_box

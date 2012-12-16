@@ -122,6 +122,9 @@ class Player extends Tank
   suck_radius: 50
   mover = make_mover "w", "s", "a", "d"
 
+  score: 0
+  display_score: 0
+
   inner_ring: {
     sprite: "101,133,22,22"
     size: 22
@@ -170,12 +173,18 @@ class Player extends Tank
     target_alpha, alpha_rate = if @sucking then 255, 5 else 0, 3
     @ring_alpha = approach @ring_alpha, target_alpha, dt * 255 * alpha_rate
 
+    @display_score = approach @display_score, @score,
+      dt * ((@score - @display_score) * 1.5 + 14)
+
   take_hit: (thing, world) =>
     return if @hit_seq
     if thing.is_enemy
       sfx\play "hit2"
       world.viewport\shake!
       @shove thing.box
+
+  enemy_killed: (thing, world) =>
+    @score += thing.score if thing.score
 
   draw: =>
     super!

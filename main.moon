@@ -51,6 +51,7 @@ class FadeOutScreen
       @viewport\pop!
 
   transition: (fn) =>
+    return if @seq
     @seq = Sequence ->
       tween @, 1.0, shroud_alpha: 255
       fn!

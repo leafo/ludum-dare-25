@@ -8,6 +8,8 @@ class Enemy extends Tank
   speed: 20
   health: 40
 
+  score: 78
+
   new: (...) =>
     super ...
     @health = @@health
@@ -47,6 +49,7 @@ class Enemy extends Tank
 
         if @health <= 0
           \add Explosion @world, cx, cy
+          world.player\enemy_killed @, world
 
 
   update: (dt, world) =>
