@@ -8,6 +8,7 @@ require "guns"
 require "tank"
 require "enemies"
 require "pickup"
+require "ui"
 
 require "lovekit.screen_snap"
 
@@ -23,6 +24,23 @@ export sprite, dispatch, sfx
 
 local snapper
 local Game
+
+box_text = (msg, x, y, center=true) ->
+  msg = msg\lower!
+
+  w, h = fonts.main\getWidth(msg), fonts.main\getHeight!
+  g.push!
+
+  if center
+    g.translate x - w/2, y - h/2
+  else
+    g.translate x, y - h/2
+
+  g.setColor 255,255,255
+  g.rectangle "fill", 0,0,w,h
+  g.setColor 0,0,0
+  g.print msg, 0,0
+  g.pop!
 
 class World
   disable_project: false
@@ -61,6 +79,8 @@ class World
       3,4,5,6,7,8,9,10,11
     }, 0.05
     @flare = (...) => sprite\draw "48,32,32,32", ...
+
+    @level_progress = HorizBar 80, 10
 
   draw_background: =>
     g.push!
@@ -121,6 +141,19 @@ class World
     g.setColor 255,255,255,255
     g.pop!
 
+    g.push!
+    g.scale @viewport.screen.scale
+
+    w = w/3
+    h = h/3
+
+    box_text "Energy: #{@player.energy_count or 0}", 10, 10, false
+    box_text "Score: #{@player.score or 0}", 10, 20, false
+
+    @level_progress\draw w - 10 - @level_progress.w, 7
+    g.pop!
+
+
   draw: =>
     @viewport\center_on_pt @player.x, @player.y, @map_box
 
@@ -129,19 +162,23 @@ class World
     if @disable_project
       @draw_ground!
       @draw_entities!
-      -- @draw_hud!
+      @draw_hud!
     else
+      @colors.factor = 50
       @colors\render ->
         @ground_project\render -> @draw_ground!
         @entity_project\render -> @draw_entities!
 
-    @draw_hud!
+      @colors.factor = 200
+      @colors\render ->
+        @draw_hud!
+
 
     g.setColor 255,255,255
 
     g.scale 2
-    p tostring(timer.getFPS!), 2, 2
-    p "Energy: #{@energy_count}", 2, 12
+    -- p tostring(timer.getFPS!), 2, 2
+    -- p "Energy: #{@energy_count}", 2, 12
 
   update: (dt) =>
     @viewport\update dt
