@@ -90,15 +90,18 @@ class Projector
     fn!
     g.setCanvas old_canvas
 
+    g.setBlendMode "premultiplied"
     g.setPixelEffect @effect unless @disabled
     @effect\send "R", @radius
     g.draw @canvas, 0,0
     g.setPixelEffect!
+    g.setBlendMode "alpha"
 
 
 class ColorSeparate
   shader: -> [[
     vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
+      // return Texel(tex, st);
       float dist = length((st - 0.5) * 2);
 
       if (dist < 0.5) {
@@ -132,9 +135,10 @@ class ColorSeparate
     fn!
     g.setCanvas old_canvas
 
+    g.setBlendMode "premultiplied"
     g.setPixelEffect @effect unless @disabled
     g.draw @canvas, 0,0
     g.setPixelEffect!
-
+    g.setBlendMode "alpha"
 
 
