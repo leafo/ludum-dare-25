@@ -58,7 +58,31 @@ class Enemy extends Tank
   __tostring: => "Enemy<#{@box}>"
 
 class Green extends Enemy
+  ox: 7
+  oy: 6
+  sprite: "17,34,14,12"
+
 class Blue extends Enemy
+  ox: 9
+  oy: 7
+  sprite: "17,49,15,14"
+
 class Red extends Enemy
+  ox: 5
+  oy: 7
+  spite: "17,65,14,14"
+
 class Orange extends Enemy
+  ox: 8
+  oy: 6
+  spite: "15,81,17,12"
+
+gun_sprites = {
+  green: "35,38,8,4"
+  blue: "35,54,8,4"
+  red: "35,70,8,4"
+  orange: "35,85,8,4"
+}
+
+
 

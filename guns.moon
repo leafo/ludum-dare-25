@@ -105,10 +105,13 @@ class MachineGun extends Gun
   recoil_1: 0.05
   recoil_2: 0.05
 
+  sprite: "35,85,8,4"
+  w: 6
+
   spread: math.pi / 8
 
   bullet: class extends SpriteBullet
-    damage: {1,2}
+    damage: {2,4}
 
     ox: 4
     oy: 1

@@ -31,8 +31,6 @@ class Tank
       @effects = EffectList @
 
   loadout: =>
-    -- @mount_gun MachineGun, 0, -4
-    -- @mount_gun MachineGun, 0, 4
     @mount_gun TankGun, 0, 0
 
   mount_gun: (gun, x=0, y=0) =>
@@ -102,6 +100,10 @@ class Player extends Tank
 
   new: (x, y, @world) =>
     super x,y
+
+  loadout: =>
+    @mount_gun MachineGun, 0, -4
+    @mount_gun MachineGun, 0, 4
 
   update: (dt) =>
     super dt

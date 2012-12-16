@@ -8,6 +8,8 @@ require "guns"
 require "tank"
 require "enemies"
 
+require "lovekit.screen_snap"
+
 import cos,sin,abs from math
 
 {graphics: g, :timer, :mouse} = love
@@ -16,6 +18,8 @@ import cos,sin,abs from math
 p = (str, ...) -> g.print str\lower!, ...
 
 export sprite
+
+local snapper
 
 class World
   disable_project: false
@@ -42,7 +46,9 @@ class World
     @map_box = Box 0,0, @map.real_width, @map.real_height
 
     -- create some enemies
-    @entities\add Enemy, 150, 150
+    for xx = 1,2
+      for yy = 1,2
+        @entities\add Green, 150 + xx * 40, 150 + yy * 40
 
     @background = TiledBackground "img/stars.png", @viewport
 
@@ -97,9 +103,9 @@ class World
 
     g.setColor 255,255,255
 
-
     g.scale 2
     p tostring(timer.getFPS!), 2, 2
+    p "Loadout: 1", 2, 12
 
   update: (dt) =>
     @viewport\update dt
@@ -137,6 +143,8 @@ class Game
 
   draw: => @world\draw!
   update: (dt) =>
+    return if dt > 0.5
+
     reloader\update! if reloader
     return if @paused
 
@@ -144,10 +152,17 @@ class Game
       @player\shoot!
 
     @world\update dt
+    snapper\tick! if snapper
 
   on_key: (key) =>
     with @world
       switch key
+        when "1"
+          if snapper
+            snapper\write!
+            snapper = nil
+          else
+            snapper = ScreenSnap!
         when " "
           @paused = not @paused
         when "x"
