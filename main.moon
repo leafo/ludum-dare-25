@@ -253,9 +253,11 @@ class Enemy extends Tank
   color: {255, 200, 200}
   spin: 4
   speed: 20
+  health: 100
 
   new: (...) =>
     super ...
+    @health = @@health
     @ai = Sequence ->
       dir = Vec2d.random!
       during 0.5, (dt) ->
@@ -272,6 +274,8 @@ class Enemy extends Tank
       again!
 
   take_hit: (thing) =>
+    return if @health < 0
+
     if thing.is_bullet
       thing.alive = false
       @shove thing, 5, 0.2
@@ -281,6 +285,7 @@ class Enemy extends Tank
       bx, by = unpack bdir * 2 + Vec2d thing\center!
 
       damage = math.floor math.random! * 2 + 1
+      @health -= damage
 
       with @world.particles
         \add NumberParticle cx,cy, damage
@@ -290,7 +295,7 @@ class Enemy extends Tank
     @world = world
     @ai\update dt
     super dt
-    true
+    @health > 0
 
   __tostring: => "Enemy<#{@box}>"
 
@@ -393,12 +398,16 @@ class World
         enemy\take_hit thing
 
 class Game
+  paused: false
+
   new: =>
     @player = Player 100, 100, @
     @world = World @player
 
   draw: => @world\draw!
   update: (dt) =>
+    return if @paused
+
     if mouse.isDown "l"
       @player\shoot!
 
@@ -408,6 +417,8 @@ class Game
     with @world
       switch key
         when " "
+          @paused = not @paused
+        when "x"
           .disable_project = not .disable_project
     false
 
