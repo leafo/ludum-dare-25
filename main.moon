@@ -1,4 +1,5 @@
 
+reloader = require "lovekit.reloader"
 require "lovekit.all"
 
 require "project"
@@ -12,7 +13,7 @@ p = (str, ...) -> g.print str\lower!, ...
 
 import cos,sin,abs from math
 
-local sprite
+export sprite
 
 approach_dir = do
   PI = math.pi
@@ -328,6 +329,11 @@ class World
 
     @background = TiledBackground "img/stars.png", @viewport
 
+    @explode = Animator sprite, {
+      3,4,5,6,7,8,9,10,11
+    }, 0.05
+    @flare = (...) => sprite\draw "48,32,32,32", ...
+
   draw_background: =>
     g.push!
     g.scale @viewport.screen.scale
@@ -344,7 +350,11 @@ class World
     @player\draw dt
     @entities\draw!
     @particles\draw!
-    g.setColor 255,255,255
+    g.setColor 255,255,255,255
+
+    -- @explode\draw @player.x, @player.y
+    -- @flare @player.x, @player.y
+
     @viewport\pop!
 
   draw: =>
@@ -360,6 +370,7 @@ class World
         @ground_project\render -> @draw_ground!
         @entity_project\render -> @draw_entities!
 
+
     g.setColor 0,0,0
     hud_height = 80
     g.rectangle "fill", 0, 0, g.getWidth!, hud_height
@@ -368,6 +379,7 @@ class World
       g.getWidth!, hud_height
 
     g.setColor 255,255,255
+
 
     g.scale 2
     p tostring(timer.getFPS!), 2, 2
@@ -378,6 +390,8 @@ class World
     @player\update dt
     @entities\update dt, @
     @particles\update dt, @
+
+    @explode\update dt
 
     -- respond to collision
     @collide\clear!
@@ -406,6 +420,7 @@ class Game
 
   draw: => @world\draw!
   update: (dt) =>
+    reloader\update! if reloader
     return if @paused
 
     if mouse.isDown "l"
@@ -424,8 +439,8 @@ class Game
 
   mousepressed: (x,y) =>
     x, y = @world.viewport\unproject x,y
-    -- print "creating particle: #{x}, #{y}"
-    -- @world.particles\add NumberParticle x,y, "123"
+    print "boom: #{x}, #{y}"
+    @world.particles\add Explosion @world, x,y
 
 export fonts = {}
 load_font = (img, chars)->
@@ -434,7 +449,7 @@ load_font = (img, chars)->
 
 love.load = ->
   g.setBackgroundColor 61/2, 52/2, 47/2
-  sprite = Spriter "img/sprite.png"
+  sprite = Spriter "img/sprite.png", 16
   fonts.main = load_font "img/font.png",
     [[ abcdefghijklmnopqrstuvwxyz-1234567890!.,:;'"?$&]]
 

@@ -109,7 +109,7 @@ class ColorSeparate
       float b = Texel(tex, vec2(st.x - delta, st.y)).b;
       float a = Texel(tex, vec2(st.x, st.y)).a;
 
-      return vec4(r,g,b,a);
+      return vec4(r,g,b, a);
     }
   ]]
 
