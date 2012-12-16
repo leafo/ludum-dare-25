@@ -254,7 +254,7 @@ class Enemy extends Tank
   color: {255, 200, 200}
   spin: 4
   speed: 20
-  health: 100
+  health: 20
 
   new: (...) =>
     super ...
@@ -291,6 +291,10 @@ class Enemy extends Tank
       with @world.particles
         \add NumberParticle cx,cy, damage
         \add SparkEmitter @world, bx, by, bdir
+
+        if @health <= 0
+          \add Explosion @world, cx, cy
+
 
   update: (dt, world) =>
     @world = world
@@ -439,8 +443,8 @@ class Game
 
   mousepressed: (x,y) =>
     x, y = @world.viewport\unproject x,y
-    print "boom: #{x}, #{y}"
-    @world.particles\add Explosion @world, x,y
+    -- print "boom: #{x}, #{y}"
+    -- @world.particles\add Explosion @world, x,y
 
 export fonts = {}
 load_font = (img, chars)->
