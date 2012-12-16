@@ -18,12 +18,15 @@ import cos,sin,abs from math
 
 p = (str, ...) -> g.print str\lower!, ...
 
-export sprite
+export fonts = {}
+export sprite, dispatch
 
 local snapper
+local Game
 
 class World
   disable_project: false
+  energy_count: 0
 
   new: (@player) =>
     @viewport = EffectViewport scale: 3
@@ -45,6 +48,7 @@ class World
       \add_tiles tiles
 
     @map_box = Box 0,0, @map.real_width, @map.real_height
+    @bomb_pad = BombPad 80, 80
 
     -- create some enemies
     for xx = 1,2
@@ -67,6 +71,8 @@ class World
   draw_ground: =>
     @viewport\apply!
     @map\draw @viewport
+    @bomb_pad\draw!
+
     @viewport\pop!
 
   draw_entities: =>
@@ -95,17 +101,12 @@ class World
         @entity_project\render -> @draw_entities!
 
     g.setColor 0,0,0
-    hud_height = 80
-    -- g.rectangle "fill", 0, 0, g.getWidth!, hud_height
-
-    -- g.rectangle "fill", 0, g.getHeight! - hud_height,
-    --   g.getWidth!, hud_height
 
     g.setColor 255,255,255
 
     g.scale 2
     p tostring(timer.getFPS!), 2, 2
-    p "Loadout: 1", 2, 12
+    p "Energy: #{@energy_count}", 2, 12
 
   update: (dt) =>
     @viewport\update dt
@@ -113,6 +114,8 @@ class World
     @player\update dt, @
     @entities\update dt, @
     @particles\update dt, @
+
+    @bomb_pad\update dt, @
 
     @explode\update dt
 
@@ -133,6 +136,53 @@ class World
       continue unless enemy.is_enemy
       for thing in *@collide\get_touching enemy.box
         enemy\take_hit thing, @
+
+
+class Title
+  new: =>
+    @viewport = EffectViewport scale: 3
+    @title_image = imgfy "img/title.png"
+    @shroud_alpha = 0
+    @colors = ColorSeparate!
+
+  draw: =>
+    @colors\render ->
+      @viewport\apply!
+      @title_image\draw 0,0
+
+      cx, cy = @viewport\center!
+      @box_text "Press Enter To Begin", cx, cy - 10
+
+      if @shroud_alpha > 0
+        @viewport\draw {0,0,0, @shroud_alpha}
+
+      g.setColor 255,255,255,255
+      @viewport\pop!
+
+  box_text: (msg, x, y) =>
+    msg = msg\lower!
+    w, h = fonts.main\getWidth(msg), fonts.main\getHeight!
+    g.push!
+    g.translate x - w/2, y - h/2
+    g.rectangle "fill", 0,0,w,h
+    g.setColor 0,0,0
+    g.print msg, 0,0
+    g.pop!
+
+  update: (dt) =>
+    @seq\update dt if @seq
+    @colors.factor = math.sin(timer.getTime! * 3) * 25 + 75
+
+  on_key: (key) =>
+    if key == "return" or key == " "
+      @transition_to Game!
+
+  transition_to: (state) =>
+    @seq = Sequence ->
+      tween @, 1.0, shroud_alpha: 255
+      dispatch\push state
+      @shroud_alpha = 0
+      @seq = nil
 
 class Game
   paused: false
@@ -171,12 +221,13 @@ class Game
 
   mousepressed: (x,y) =>
     x, y = @world.viewport\unproject x,y
+
+    -- @world.particles\add EnergyEmitter @world, x,y
     @world.entities\add Energy, x,y
 
     -- print "boom: #{x}, #{y}"
     -- @world.particles\add Explosion @world, x,y
 
-export fonts = {}
 load_font = (img, chars)->
   font_image = imgfy img
   g.newImageFont font_image.tex, chars
@@ -189,6 +240,6 @@ love.load = ->
 
   g.setFont fonts.main
 
-  d = Dispatcher Game!
-  d\bind love
+  dispatch = Dispatcher Title!
+  dispatch\bind love
 

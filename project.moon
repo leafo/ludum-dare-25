@@ -100,6 +100,8 @@ class Projector
 
 class ColorSeparate
   shader: -> [[
+    extern number factor;
+
     vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
       // return Texel(tex, st);
       float dist = length((st - 0.5) * 2);
@@ -110,7 +112,7 @@ class ColorSeparate
 
       dist -= 0.5;
 
-      float delta = dist/50;
+      float delta = dist/factor;
 
       float r = Texel(tex, vec2(st.x + delta, st.y)).r;
       float g = Texel(tex, vec2(st.x, st.y + delta)).g;
@@ -121,7 +123,7 @@ class ColorSeparate
     }
   ]]
 
-  new: (@radius=1.2) =>
+  new: (@factor=50) =>
     @canvas = g.newCanvas!
     @canvas\setFilter "nearest", "nearest"
     @canvas\setWrap "repeat", "repeat"
@@ -137,6 +139,7 @@ class ColorSeparate
 
     g.setBlendMode "premultiplied"
     g.setPixelEffect @effect unless @disabled
+    @effect\send "factor", @factor
     g.draw @canvas, 0,0
     g.setPixelEffect!
     g.setBlendMode "alpha"
