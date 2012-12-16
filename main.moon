@@ -58,8 +58,8 @@ class Bullet extends Box
   __tostring: => "Bullet<#{Box.__tostring self}>"
 
 class Gun
-  ox: -2
-  oy: -2
+  ox: 2
+  oy: 2
 
   recoil_1: 0.1
   recoil_2: 0.2
@@ -73,16 +73,14 @@ class Gun
 
   new: (@tank) =>
     @dir = Vec2d 1,0
+    @time = 0
 
-  draw: =>
-    g.push!
-    g.rotate @dir\radians!
-
-    -- what happens here
-    sprite\draw_cell @sprite, @ox, @oy
-    g.pop!
+  draw: (gx, gy) =>
+    gx, gy = unpack Vec2d(gx, gy)\rotate @tank.dir\radians!
+    sprite\draw @sprite, gx, gy, @dir\radians!, nil, nil, @ox, @oy
 
   update: (dt) =>
+    @time += dt*4
     if @seq and not @seq\update dt
       @seq = nil
 
@@ -90,11 +88,13 @@ class Gun
     spin = @spin or @tank.spin
     approach_dir @dir, dir, dt * spin
 
-  shoot: =>
+  shoot: (gx, gy) =>
     return if @seq
 
-    x = @tank.x + @dir.x * @w
-    y = @tank.y + @dir.y * @w
+    offset = Vec2d(@w, 0)\rotate(@dir\radians!) + Vec2d(gx, gy)\rotate @tank.dir\radians!
+
+    x = @tank.x + offset.x
+    y = @tank.y + offset.y
 
     dir = if @spread
       rad = @dir\radians!
@@ -145,17 +145,26 @@ class Tank
   new: (@x, @y) =>
     @box = Box 0,0, @size, @size
     @dir = Vec2d 1,0
-    @gun = MachineGun @
+    @guns = {}
+    -- @gun = MachineGun @
     @update_box!
+
+    @mount_gun MachineGun, 0, -4
+    @mount_gun MachineGun, 0, 4
 
     if @effects
       @effects\clear @
     else
       @effects = EffectList @
 
+  mount_gun: (gun, x=0, y=0) =>
+    table.insert @guns, { gun(@), x, y }
+
   update: (dt) =>
     @moving = false
-    @gun\update dt if @gun
+    for mount in *@guns
+      mount[1]\update dt
+
     @effects\update dt
 
     if @hit_seq
@@ -168,6 +177,17 @@ class Tank
       dir = box\vector_to(@box)\normalized! * dist
       tween @, dur, x: @x + dir.x, y: @y + dir.y
       @hit_seq = nil
+
+  aim_to: (dt, pt) =>
+    for mount in *@guns
+      {gun, gx, gy} = mount
+      {ox, oy} = Vec2d(gx, gy)\rotate @dir\radians!
+      dir = pt - Vec2d @x + ox, @y + oy
+      gun\aim_to dt, dir
+
+  shoot: =>
+    for mount in *@guns
+      mount[1]\shoot unpack mount, 2
 
   move: (dt, dir) =>
     @moving = true
@@ -196,7 +216,8 @@ class Tank
 
     g.pop!
 
-    @gun\draw! if @gun
+    for mount in *@guns
+      mount[1]\draw unpack mount, 2
 
     g.pop!
 
@@ -218,9 +239,7 @@ class Player extends Tank
         @move dt, dir
 
     mpos = Vec2d @world.viewport\unproject mouse.getPosition!
-    if @gun
-      aim_dir = mpos - Vec2d(@x, @y)
-      approach_dir @gun.dir, aim_dir, dt * @spin
+    @aim_to dt, mpos
 
   take_hit: (thing) =>
     return if @hit_seq
@@ -241,12 +260,12 @@ class Enemy extends Tank
       during 0.5, (dt) ->
         @move dt, dir
 
-      dir = Vec2d.random!
+      pt = Vec2d.random! * 50 + Vec2d @x, @y
       during 0.5, (dt) ->
-        if @gun\aim_to dt, dir
+        if @aim_to dt, pt
           "cancel"
 
-      @gun\shoot dt, @world
+      @shoot dt
       wait 1.0
 
       again!
@@ -288,7 +307,7 @@ class World
 
     @map_box = Box 0,0, @map.real_width, @map.real_height
 
-    -- create some enemies
+    -- -- create some enemies
     @entities\add Enemy, 150, 150
 
   draw_ground: =>
@@ -315,7 +334,10 @@ class World
     g.setColor 0,0,0
     hud_height = 80
     g.rectangle "fill", 0, 0, g.getWidth!, hud_height
-    g.rectangle "fill", 0, g.getHeight! - hud_height, g.getWidth!, hud_height
+
+    g.rectangle "fill", 0, g.getHeight! - hud_height,
+      g.getWidth!, hud_height
+
     g.setColor 255,255,255
 
     g.scale 2
@@ -353,7 +375,7 @@ class Game
   draw: => @world\draw!
   update: (dt) =>
     if mouse.isDown "l"
-      @player.gun\shoot!
+      @player\shoot!
 
     @world\update dt
 
@@ -374,7 +396,8 @@ load_font = (img, chars)->
 love.load = ->
   g.setBackgroundColor 61/2, 52/2, 47/2
   sprite = Spriter "img/sprite.png"
-  fonts.main = load_font "img/font.png", [[ abcdefghijklmnopqrstuvwxyz-1234567890!.,:;'"?$&]]
+  fonts.main = load_font "img/font.png",
+    [[ abcdefghijklmnopqrstuvwxyz-1234567890!.,:;'"?$&]]
 
   g.setFont fonts.main
 
