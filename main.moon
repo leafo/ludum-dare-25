@@ -16,6 +16,8 @@ require "lovekit.screen_snap"
 {graphics: g, :timer, :mouse} = love
 {floor: f, min: _min, :cos, :sin, :abs} = math
 
+import box_text from require "util"
+
 p = (str, ...) -> g.print str\lower!, ...
 
 export fonts = {}
@@ -40,23 +42,13 @@ class Title
       @title_image\draw 0,0
 
       cx, cy = @viewport\center!
-      @box_text "Press Enter To Begin", cx, cy - 10
+      box_text "Press Enter To Begin", cx, cy - 10
 
       if @shroud_alpha > 0
         @viewport\draw {0,0,0, @shroud_alpha}
 
       g.setColor 255,255,255,255
       @viewport\pop!
-
-  box_text: (msg, x, y) =>
-    msg = msg\lower!
-    w, h = fonts.main\getWidth(msg), fonts.main\getHeight!
-    g.push!
-    g.translate x - w/2, y - h/2
-    g.rectangle "fill", 0,0,w,h
-    g.setColor 0,0,0
-    g.print msg, 0,0
-    g.pop!
 
   update: (dt) =>
     @seq\update dt if @seq
@@ -141,6 +133,6 @@ love.load = ->
   }
 
   sfx.play_music = ->
-  dispatch = Dispatcher Game! -- Title!
+  dispatch = Dispatcher Title! -- Game! -- Title!
   dispatch\bind love
 
