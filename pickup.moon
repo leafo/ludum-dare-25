@@ -19,6 +19,11 @@ class Energy extends Box
 
     super x,y, @size, @size
 
+  on_collect: (world) =>
+    world.particles\add EnergyEmitter world, @center!
+    world.energy_count += 1
+    @alive = false
+
   update: (dt) =>
     if @gravity_parent
       {:x,:y} = @gravity_parent
@@ -43,17 +48,31 @@ class Energy extends Box
   draw: =>
     half = @size/2
     sprite\draw @sprite, @x + half, @y + half, @rot, nil, nil, @ox, @oy
-
     -- g.setColor 255,100,100 if @gravity_parent
     -- g.rectangle "line", @unpack!
     -- g.setColor 255,255,255
 
-  -- gravitate: (dt, pt, radius) =>
-  --   to_thing = pt - Vec2d @center!
-  --   p = to_thing\len! / radius
-  --   return if p > 1
-
-  --   @accel = to_thing\normalized! * (p - 0.2) * 500
-
   __tostring: => "Energy<>"
+
+
+class BombPad extends Box
+  w: 48
+  h: 32
+
+  seq: {
+    "160,96,48,32",
+    "160,128,48,32",
+  }
+
+  new: (@x, @y) =>
+    @anim = sprite\seq @seq, 0.5
+
+  draw: => @anim\draw @x, @y
+
+  update: (dt, world) =>
+    @anim\update dt
+    if world.viewport\touches_box @
+      for e in *world.collide\get_touching @
+        if e.is_energy and e.alive
+          e\on_collect world
 

@@ -134,7 +134,7 @@ class Player extends Tank
     if @sucking = keyboard.isDown " "
       radius = @suck_radius_box!
       for e in *world.collide\get_touching radius
-        if e.is_energy and not e.gravity_parent
+        if e.is_energy and and e.alive and not e.gravity_parent
           table.insert @held_energy, e
           e.gravity_parent = @
     else

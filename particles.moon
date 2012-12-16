@@ -53,6 +53,36 @@ class SparkEmitter extends Emitter
   new: (world, x,y, @dir) =>
     super world, x,y
 
+
+class EnergyEmitter extends Emitter
+  P = class extends Particle
+    life: 0.5
+    ox: 3
+    oy: 3
+    sprite: "117,20,7,7"
+
+    new: (...) =>
+      @rot = random! * math.pi / 2
+      super ...
+
+    update: (dt, ...) =>
+      dampen_vector @vel, dt * 200
+      super dt, ...
+
+    draw: =>
+      p = @p!
+      a = (1 - p) * 255
+      g.setColor @r, @g, @b, a
+      sprite\draw @sprite, @x, @y, p * @rot, nil, nil, @ox, @oy
+
+  new: (world, x, y) =>
+    super world, x, y, 0.1, 10
+
+  make_particle: (x,y) =>
+    rads = random! * math.pi * 2
+    P x,y, Vec2d.from_radians(rads) * 100
+
+
 class Explosion extends Sequence
   alive: true
 
