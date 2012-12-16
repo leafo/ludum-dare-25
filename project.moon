@@ -90,3 +90,46 @@ class Projector
     g.draw @canvas, 0,0
     g.setPixelEffect!
 
+
+class ColorSeparate
+  shader: -> [[
+    vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
+      float dist = length((st - 0.5) * 2);
+
+      if (dist < 0.5) {
+        return Texel(tex, st);
+      }
+
+      dist -= 0.5;
+
+      float delta = dist/50;
+
+      float r = Texel(tex, vec2(st.x + delta, st.y)).r;
+      float g = Texel(tex, vec2(st.x, st.y + delta)).g;
+      float b = Texel(tex, vec2(st.x - delta, st.y)).b;
+      float a = Texel(tex, vec2(st.x, st.y)).a;
+
+      return vec4(r,g,b,a);
+    }
+  ]]
+
+  new: (@radius=1.2) =>
+    @canvas = g.newCanvas!
+    @canvas\setFilter "nearest", "nearest"
+    @canvas\setWrap "repeat", "repeat"
+    @effect = g.newPixelEffect @shader!
+
+  render: (fn) =>
+    old_canvas = g.getCanvas!
+
+    g.setCanvas @canvas
+    @canvas\clear 0,0,0,0
+    fn!
+    g.setCanvas old_canvas
+
+    g.setPixelEffect @effect unless @disabled
+    g.draw @canvas, 0,0
+    g.setPixelEffect!
+
+
+

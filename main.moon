@@ -302,6 +302,8 @@ class World
     @ground_project = Projector 1.2
     @entity_project = Projector 1.3
 
+    @colors = ColorSeparate!
+
     tile_sprite = Spriter "img/tiles.png", 16
     tiles = setmetatable { {tid: 0} }, { __index: => @[1] }
     @map = with TileMap 32, 32
@@ -310,7 +312,7 @@ class World
 
     @map_box = Box 0,0, @map.real_width, @map.real_height
 
-    -- -- create some enemies
+    -- create some enemies
     @entities\add Enemy, 150, 150
 
     @background = TiledBackground "img/stars.png", @viewport
@@ -339,12 +341,13 @@ class World
 
     @draw_background!
 
-    if @disable_project
-      @draw_ground!
-      @draw_entities!
-    else
-      @ground_project\render -> @draw_ground!
-      @entity_project\render -> @draw_entities!
+    @colors\render ->
+      if @disable_project
+        @draw_ground!
+        @draw_entities!
+      else
+        @ground_project\render -> @draw_ground!
+        @entity_project\render -> @draw_entities!
 
     g.setColor 0,0,0
     hud_height = 80
