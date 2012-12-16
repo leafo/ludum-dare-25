@@ -2,6 +2,8 @@
 {:effects} = lovekit
 {graphics: g, :timer, :mouse, :keyboard} = love
 
+{:sin, :cos, :min} = math
+
 import approach_dir from require "util"
 
 export *
@@ -99,9 +101,20 @@ class Player extends Tank
   suck_radius: 50
   mover = make_mover "w", "s", "a", "d"
 
+  inner_ring: {
+    sprite: "101,133,22,22"
+    size: 22
+  }
+
+  outer_ring: {
+    sprite: "92,92,40,40"
+    size: 40
+  }
+
   new: (x, y, @world) =>
     super x,y
     @held_energy = {}
+    @ring_alpha = 0
 
   loadout: =>
     @mount_gun MachineGun, 0, -4
@@ -118,8 +131,7 @@ class Player extends Tank
     mpos = Vec2d world.viewport\unproject mouse.getPosition!
     @aim_to dt, mpos
 
-    @sucking = keyboard.isDown " "
-    if @sucking
+    if @sucking = keyboard.isDown " "
       radius = @suck_radius_box!
       for e in *world.collide\get_touching radius
         if e.is_energy and not e.gravity_parent
@@ -130,6 +142,9 @@ class Player extends Tank
         e.gravity_parent = nil
       @held_energy = {}
 
+    target_alpha, alpha_rate = if @sucking then 255, 5 else 0, 3
+    @ring_alpha = approach @ring_alpha, target_alpha, dt * 255 * alpha_rate
+
   take_hit: (thing) =>
     return if @hit_seq
     if thing.is_enemy
@@ -138,8 +153,22 @@ class Player extends Tank
 
   draw: =>
     super!
-    if @sucking
-      @suck_radius_box!\outline!
+    if @ring_alpha > 0
+      t = timer.getTime()
+      scale = 1.0 + sin(t * 8) * 0.1
+
+      g.setColor 255,255,255, @ring_alpha
+      half = @outer_ring.size / 2
+      sprite\draw @outer_ring.sprite, @x, @y, t * 4,
+        scale, nil, half, half
+
+      half = @inner_ring.size / 2
+      sprite\draw @inner_ring.sprite, @x, @y, t * -5,
+        scale, nil, half, half
+
+      g.setColor 255,255,255, 255
+
+      -- @suck_radius_box!\outline!
 
   suck_radius_box: =>
     half = @suck_radius / 2

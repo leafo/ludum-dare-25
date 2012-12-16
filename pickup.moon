@@ -16,7 +16,6 @@ class Energy extends Box
     @vel = Vec2d 0,0
     @accel = Vec2d 0,0
     @rot = 0
-    @drot = 0
 
     super x,y, @size, @size
 
@@ -35,10 +34,8 @@ class Energy extends Box
       unless @vel\is_zero!
         dampen_vector @vel, dt * max(@vel\len!, 1.0) * 5
 
-    @drot = @vel\len! / 1000
-
     @vel\adjust unpack @accel * dt
-    @rot += @drot
+    @rot += @vel\len! / 1000
     @x += @vel.x * dt
     @y += @vel.y * dt
     true
