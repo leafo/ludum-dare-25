@@ -14,7 +14,7 @@ require "lovekit.screen_snap"
 import cos,sin,abs from math
 
 {graphics: g, :timer, :mouse} = love
-{floor: f} = math
+{floor: f, min: _min} = math
 
 p = (str, ...) -> g.print str\lower!, ...
 
@@ -87,6 +87,40 @@ class World
 
     @viewport\pop!
 
+  draw_hud: =>
+    w, h = g.getWidth!, g.getHeight!
+    r = w/h
+
+    g.push!
+    g.scale w/2, h/2
+    g.translate 1, 1
+    g.scale 0.9, 1.2
+
+    for e in *@entities
+      continue unless e.alive
+
+      cx, cy, rr,gg,bb = if e.is_enemy
+        e.x, e.y, 255,100,100
+      elseif e.is_energy
+        ex,ey = e\center!
+        ex, ey, 140,140,255, 180
+      else
+        continue
+
+      to_thing = Vec2d(cx - @player.x, cy - @player.y)
+      aa = _min(0.8, to_thing\len! / 100) * 255
+
+      vec = to_thing\normalized!
+
+      vec[2] = 0.8 if vec[2] > 0.8
+      vec[2] = -0.8 if vec[2] < -0.8
+
+      g.setColor rr,gg,bb, aa
+      g.point unpack vec
+
+    g.setColor 255,255,255,255
+    g.pop!
+
   draw: =>
     @viewport\center_on_pt @player.x, @player.y, @map_box
 
@@ -95,12 +129,13 @@ class World
     if @disable_project
       @draw_ground!
       @draw_entities!
+      -- @draw_hud!
     else
       @colors\render ->
         @ground_project\render -> @draw_ground!
         @entity_project\render -> @draw_entities!
 
-    g.setColor 0,0,0
+    @draw_hud!
 
     g.setColor 255,255,255
 
@@ -198,6 +233,7 @@ class Game
     sfx\play_music "xmoon"
 
   draw: => @world\draw!
+
   update: (dt) =>
     return if dt > 0.5
 
@@ -227,10 +263,8 @@ class Game
 
   mousepressed: (x,y) =>
     x, y = @world.viewport\unproject x,y
-
     -- @world.particles\add EnergyEmitter @world, x,y
     @world.entities\add Energy, x,y
-
     -- print "boom: #{x}, #{y}"
     -- @world.particles\add Explosion @world, x,y
 
@@ -240,6 +274,7 @@ load_font = (img, chars)->
 
 love.load = ->
   g.setBackgroundColor 61/2, 52/2, 47/2
+  g.setPointSize 12
   sprite = Spriter "img/sprite.png", 16
   fonts.main = load_font "img/font.png",
     [[ abcdefghijklmnopqrstuvwxyz-1234567890!.,:;'"?$&]]
@@ -254,6 +289,7 @@ love.load = ->
     "energy-collect"
   }
 
-  dispatch = Dispatcher Title!
+  sfx.play_music = ->
+  dispatch = Dispatcher Game! -- Title!
   dispatch\bind love
 
