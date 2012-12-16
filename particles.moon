@@ -12,6 +12,9 @@ linear_step = (p, left, right, start=0, stop=1) ->
   p = (p - start) / (stop - start)
   right * p + left * (1 - p)
 
+spread_dir = (dir, spread) ->
+  dir\rotate (random! - 0.5) * spread
+
 class NumberParticle extends Particle
   life: 0.8
   speed: 100
@@ -35,4 +38,18 @@ class NumberParticle extends Particle
     g.print @str, 0,0, p * @dr, nil, nil, 4,4
     g.pop!
 
+
+class SparkEmitter extends Emitter
+  spread: math.pi / 8
+  speed: 60
+
+  P = class extends PixelParticle
+    size: 1
+    life: 0.3
+
+  make_particle: (x,y) =>
+    P x,y, spread_dir @dir * @speed, @spread
+
+  new: (world, x,y, @dir) =>
+    super world, x,y
 

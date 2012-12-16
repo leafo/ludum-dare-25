@@ -277,8 +277,14 @@ class Enemy extends Tank
       @shove thing, 5, 0.2
 
       cx, cy = @box\center!
+      bdir = thing.vel\normalized!
+      bx, by = unpack bdir * 2 + Vec2d thing\center!
+
       damage = math.floor math.random! * 2 + 1
-      @world.particles\add NumberParticle cx,cy, damage
+
+      with @world.particles
+        \add NumberParticle cx,cy, damage
+        \add SparkEmitter @world, bx, by, bdir
 
   update: (dt, world) =>
     @world = world
