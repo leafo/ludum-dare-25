@@ -313,6 +313,14 @@ class World
     -- -- create some enemies
     @entities\add Enemy, 150, 150
 
+    @background = TiledBackground "img/stars.png", @viewport
+
+  draw_background: =>
+    g.push!
+    g.scale @viewport.screen.scale
+    @background\draw -@viewport.x, -@viewport.y
+    g.pop!
+
   draw_ground: =>
     @viewport\apply!
     @map\draw @viewport
@@ -328,6 +336,8 @@ class World
 
   draw: =>
     @viewport\center_on_pt @player.x, @player.y, @map_box
+
+    @draw_background!
 
     if @disable_project
       @draw_ground!
