@@ -1,5 +1,5 @@
 
-reloader = require "lovekit.reloader"
+-- reloader = require "lovekit.reloader"
 require "lovekit.all"
 
 require "project"
