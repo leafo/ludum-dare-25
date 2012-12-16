@@ -7,8 +7,8 @@ import approach_dir from require "util"
 export *
 
 class Tank
-  ox: -6
-  oy: -6
+  ox: 6
+  oy: 6
   sprite: "8,8,14,12"
 
   size: 8
@@ -87,12 +87,7 @@ class Tank
     g.translate @x, @y
 
     -- body
-    g.push!
-    g.rotate @dir\radians!
-
-    sprite\draw_cell @sprite, @ox, @oy
-
-    g.pop!
+    sprite\draw @sprite, 0,0, @dir\radians!, nil, nil, @ox, @oy
 
     for mount in *@guns
       mount[1]\draw unpack mount, 2

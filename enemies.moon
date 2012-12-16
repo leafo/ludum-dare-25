@@ -57,3 +57,8 @@ class Enemy extends Tank
 
   __tostring: => "Enemy<#{@box}>"
 
+class Green extends Enemy
+class Blue extends Enemy
+class Red extends Enemy
+class Orange extends Enemy
+
