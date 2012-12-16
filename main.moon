@@ -2,6 +2,7 @@
 require "lovekit.all"
 
 require "project"
+require "particles"
 
 {:effects} = lovekit
 {graphics: g, :timer, :mouse} = love
@@ -275,6 +276,10 @@ class Enemy extends Tank
       thing.alive = false
       @shove thing, 5, 0.2
 
+      cx, cy = @box\center!
+      damage = math.floor math.random! * 2 + 1
+      @world.particles\add NumberParticle cx,cy, damage
+
   update: (dt, world) =>
     @world = world
     @ai\update dt
@@ -285,7 +290,6 @@ class Enemy extends Tank
 
 class World
   disable_project: false
-  blur_scale: 0.2
 
   new: (@player) =>
     @viewport = EffectViewport scale: 3
@@ -293,11 +297,10 @@ class World
     @collide = UniformGrid!
 
     @entities = ReuseList!
+    @particles = DrawList!
 
     @ground_project = Projector 1.2
     @entity_project = Projector 1.3
-
-    -- @blur_project = Glow @blur_scale
 
     tile_sprite = Spriter "img/tiles.png", 16
     tiles = setmetatable { {tid: 0} }, { __index: => @[1] }
@@ -319,6 +322,8 @@ class World
     @viewport\apply!
     @player\draw dt
     @entities\draw!
+    @particles\draw!
+    g.setColor 255,255,255
     @viewport\pop!
 
   draw: =>
@@ -348,6 +353,7 @@ class World
     @map\update dt
     @player\update dt
     @entities\update dt, @
+    @particles\update dt, @
 
     -- respond to collision
     @collide\clear!
@@ -387,6 +393,9 @@ class Game
     false
 
   mousepressed: (x,y) =>
+    x, y = @world.viewport\unproject x,y
+    -- print "creating particle: #{x}, #{y}"
+    -- @world.particles\add NumberParticle x,y, "123"
 
 export fonts = {}
 load_font = (img, chars)->
