@@ -55,7 +55,6 @@ class Energy extends Box
 
   __tostring: => "Energy<>"
 
-
 class BombPad extends Box
   w: 48
   h: 32

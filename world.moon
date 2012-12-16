@@ -1,6 +1,6 @@
 
 {graphics: g, :timer, :mouse} = love
-{floor: f, min: _min, :cos, :sin, :abs} = math
+{floor: f, min: _min, :cos, :sin, :abs, :random} = math
 
 import box_text from require "util"
 
@@ -9,6 +9,7 @@ export *
 class World
   disable_project: false
   energy_count: 0
+  energy_needed: 100
 
   new: (@player) =>
     @viewport = EffectViewport scale: 3
@@ -39,12 +40,7 @@ class World
 
     @background = TiledBackground "img/stars.png", @viewport
 
-    @explode = Animator sprite, {
-      3,4,5,6,7,8,9,10,11
-    }, 0.05
-    @flare = (...) => sprite\draw "48,32,32,32", ...
-
-    @level_progress = HorizBar 80, 10
+    @level_progress = HorizBar 80, 6
 
   draw_background: =>
     g.push!
@@ -65,9 +61,6 @@ class World
     @entities\draw!
     @particles\draw!
     g.setColor 255,255,255,255
-
-    -- @explode\draw @player.x, @player.y
-    -- @flare @player.x, @player.y
 
     @viewport\pop!
 
@@ -111,10 +104,14 @@ class World
     w = w/3
     h = h/3
 
-    box_text "Energy: #{@player.energy_count or 0}", 10, 10, false
+    box_text "Energy: #{@energy_count or 0}", 10, 10, false
     box_text "Score: #{@player.score or 0}", 10, 20, false
 
     @level_progress\draw w - 10 - @level_progress.w, 7
+
+    if @energy_count >= @energy_needed and timer.getTime! % 1 >= 0.5
+      box_text "Press E", w - 10, 20, 1.0
+
     g.pop!
 
 
@@ -137,7 +134,6 @@ class World
       @colors\render ->
         @draw_hud!
 
-
     g.setColor 255,255,255
 
     g.scale 2
@@ -152,8 +148,7 @@ class World
     @particles\update dt, @
 
     @bomb_pad\update dt, @
-
-    @explode\update dt
+    @seq\update dt if @seq
 
     -- respond to collision
     @collide\clear!
@@ -172,4 +167,22 @@ class World
       continue unless enemy.is_enemy
       for thing in *@collide\get_touching enemy.box
         enemy\take_hit thing, @
+
+    @level_progress.value = _min 1.0, @energy_count / @energy_needed
+
+  blow_up_planet: =>
+    @player\take_off ->
+      @player.hidden = true
+      @seq = Sequence ->
+        for i=1,100
+          cx, cy = @viewport.x, @viewport.y
+
+          for i=1,3
+            x = cx + random! * @viewport.w
+            y = cy + random! * @viewport.h
+            @particles\add Explosion @, x, y
+
+          wait 0.1
+
+        @seq = nil
 

@@ -34,7 +34,8 @@ box_text = (msg, x, y, center=true) ->
   g.push!
 
   if center
-    g.translate x - w/2, y - h/2
+    center = 0.5 if center == true
+    g.translate x - w*center, y - h/2
   else
     g.translate x, y - h/2
 

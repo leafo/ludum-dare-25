@@ -75,8 +75,8 @@ class Game
 
   new: =>
     @player = Player 100, 100, @
-    @world = World @player
     @current_level = 1
+    @world = @levels[@current_level] @player
 
   onload: =>
     sfx\play_music "xmoon"
@@ -113,9 +113,10 @@ class Game
   mousepressed: (x,y) =>
     x, y = @world.viewport\unproject x,y
     -- @world.particles\add EnergyEmitter @world, x,y
-    @world.entities\add Energy x,y
+    -- @world.entities\add Energy x,y
     -- print "boom: #{x}, #{y}"
     -- @world.particles\add Explosion @world, x,y
+    @world\blow_up_planet!
 
 load_font = (img, chars)->
   font_image = imgfy img

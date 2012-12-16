@@ -8,7 +8,20 @@ import approach_dir from require "util"
 
 export *
 
+class FlyOut extends effects.Effect
+  before: =>
+    g.push!
+    p = @p!
+    g.scale p*2 + 1
+    g.setColor 255,255,255, (1 - p) * 255
+
+  after: =>
+    g.pop!
+
 class Tank
+  locked: false
+  hidden: false
+
   ox: 6
   oy: 6
   sprite: "8,8,14,12"
@@ -57,6 +70,8 @@ class Tank
       @hit_seq = nil
 
   aim_to: (dt, pt) =>
+    return if @locked
+
     for mount in *@guns
       {gun, gx, gy} = mount
       {ox, oy} = Vec2d(gx, gy)\rotate @dir\radians!
@@ -64,10 +79,14 @@ class Tank
       gun\aim_to dt, dir
 
   shoot: =>
+    return if @locked
+
     for mount in *@guns
       mount[1]\shoot unpack mount, 2
 
   move: (dt, dir) =>
+    return if @locked
+
     @moving = true
     approach_dir @dir, dir, @spin * dt
 
@@ -81,10 +100,12 @@ class Tank
     @box.y = @y - hsize
 
   draw: =>
-    @effects\before!
+    return if @hidden
 
     g.push!
     g.translate @x, @y
+
+    @effects\before!
 
     -- body
     sprite\draw @sprite, 0,0, @dir\radians!, nil, nil, @ox, @oy
@@ -92,9 +113,9 @@ class Tank
     for mount in *@guns
       mount[1]\draw unpack mount, 2
 
-    g.pop!
-
     @effects\after!
+
+    g.pop!
     -- @box\outline!
 
 class Player extends Tank
@@ -111,7 +132,7 @@ class Player extends Tank
     size: 40
   }
 
-  new: (x, y, @world) =>
+  new: (x, y) =>
     super x,y
     @held_energy = {}
     @ring_alpha = 0
@@ -119,6 +140,10 @@ class Player extends Tank
   loadout: =>
     @mount_gun MachineGun, 0, -4
     @mount_gun MachineGun, 0, 4
+
+  shoot: (...) =>
+    return if @sucking
+    super ...
 
   update: (dt, world) =>
     super dt
@@ -177,4 +202,11 @@ class Player extends Tank
 
   __tostring: => "Player<>"
 
+  take_off: (done_fn) =>
+    return if @locked
+
+    @locked = true
+    e = FlyOut 0.5
+    e.on_finish = done_fn
+    @effects\add e
 
