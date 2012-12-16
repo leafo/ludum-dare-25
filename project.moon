@@ -38,7 +38,7 @@ class Projector
     float PI = 3.14159265358979323846264;
     vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
       vec2 pos = (st - 0.5) * 2;
-      pos.x = pos.x * 1.3;
+      pos.x = pos.x * 1.4;
       pos.y = pos.y / 1.2;
 
       // float R = 1.2;
@@ -64,7 +64,11 @@ class Projector
         )
       );
 
+      lat *= 1.8;
+      long *= 0.8;
+
       vec2 source = (vec2(long, lat) / PI * 2 + 1) / 2;
+
 
       float darken = min(1, 1.1 - pow(length(pos) / R, 5));
 
