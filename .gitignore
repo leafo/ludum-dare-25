@@ -1,2 +1,4 @@
 *.lua
 lovekit
+*.zip
+*.love
