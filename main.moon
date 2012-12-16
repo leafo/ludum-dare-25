@@ -19,31 +19,30 @@ require "lovekit.screen_snap"
 
 import box_text from require "util"
 
-p = (str, ...) -> g.print str\lower!, ...
-
 export fonts = {}
 export sprite, dispatch, sfx
+
+p = (str, ...) -> g.print str\lower!, ...
 
 local snapper
 local Game
 
-class Title
+class FadeOutScreen
   new: =>
     @viewport = EffectViewport scale: 3
-    @title_image = imgfy "img/title.png"
     @shroud_alpha = 0
     @colors = ColorSeparate!
 
-  onload: =>
-    sfx\play_music "xmoon-title"
+  draw_inner: =>
+
+  update: (dt) =>
+    @seq\update dt if @seq
+    @colors.factor = math.sin(timer.getTime! * 3) * 25 + 75
 
   draw: =>
     @colors\render ->
       @viewport\apply!
-      @title_image\draw 0,0
-
-      cx, cy = @viewport\center!
-      box_text "Press Enter To Begin", cx, cy - 10
+      @draw_inner!
 
       if @shroud_alpha > 0
         @viewport\draw {0,0,0, @shroud_alpha}
@@ -51,37 +50,72 @@ class Title
       g.setColor 255,255,255,255
       @viewport\pop!
 
-  update: (dt) =>
-    @seq\update dt if @seq
-    @colors.factor = math.sin(timer.getTime! * 3) * 25 + 75
+  transition: (fn) =>
+    @seq = Sequence ->
+      tween @, 1.0, shroud_alpha: 255
+      fn!
+      @shroud_alpha = 0
+      @seq = nil
+
+  transition_to: (state) =>
+    @transition -> dispatch\push state
+
+class Title extends FadeOutScreen
+  new: (...) =>
+    @title_image = imgfy "img/title.png"
+    super ...
+
+  onload: =>
+    sfx\play_music "xmoon-title"
+
+  draw_inner: =>
+    @title_image\draw 0,0
+    cx, cy = @viewport\center!
+    box_text "Press Enter To Begin", cx, cy - 10
 
   on_key: (key) =>
     if key == "return" or key == " "
       @transition_to Game!
 
-  transition_to: (state) =>
-    @seq = Sequence ->
-      tween @, 1.0, shroud_alpha: 255
-      dispatch\push state
-      @shroud_alpha = 0
-      @seq = nil
+class Intermission extends FadeOutScreen
+  new: (@fn, ...) =>
+    super ...
+
+  draw_inner: =>
+    cx, cy = @viewport\center!
+    box_text "Congratulations", cx, cy - 10
+    box_text "Press Enter To Go To Next Level", cx, cy + 10
+
+  on_key: (key) =>
+    if key == "return" or key == " "
+      @transition @fn
 
 class Game
   levels: {
     Level1
+    Level2
   }
 
   paused: false
 
   new: =>
     @player = Player 100, 100, @
-    @current_level = 1
-    @world = @levels[@current_level] @player
+    @current_level = 0
+    @load_next_world!
+
+  load_next_world: =>
+    @current_level += 1
+    w = @levels[@current_level]
+    error "Ran out of levels!" unless w
+    @world = w @, @player
 
   onload: =>
     sfx\play_music "xmoon"
 
-  draw: => @world\draw!
+  draw: =>
+    @world\draw!
+    g.scale 2
+    p tostring(timer.getFPS!), 2, 50
 
   update: (dt) =>
     return if dt > 0.5
@@ -95,18 +129,25 @@ class Game
     @world\update dt
     snapper\tick! if snapper
 
+  end_world: =>
+    dispatch\push Intermission ->
+      @load_next_world!
+
   on_key: (key) =>
     with @world
       switch key
-        when "1"
-          if snapper
-            snapper\write!
-            snapper = nil
-          else
-            snapper = ScreenSnap!
+        when "e"
+          if @world\ready_to_blow!
+            @world\blow_up_planet!
+        -- when "1"
+        --   if snapper
+        --     snapper\write!
+        --     snapper = nil
+        --   else
+        --     snapper = ScreenSnap!
         when "p"
           @paused = not @paused
-        when "x"
+        when "f1"
           .disable_project = not .disable_project
     false
 
@@ -116,7 +157,6 @@ class Game
     -- @world.entities\add Energy x,y
     -- print "boom: #{x}, #{y}"
     -- @world.particles\add Explosion @world, x,y
-    @world\blow_up_planet!
 
 load_font = (img, chars)->
   font_image = imgfy img
@@ -141,6 +181,6 @@ love.load = ->
   }
 
   sfx.play_music = ->
-  dispatch = Dispatcher Game!
+  dispatch = Dispatcher Title! -- Game!
   dispatch\bind love
 

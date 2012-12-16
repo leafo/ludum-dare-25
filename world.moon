@@ -1,6 +1,6 @@
 
 {graphics: g, :timer, :mouse} = love
-{floor: f, min: _min, :cos, :sin, :abs, :random} = math
+{floor: f, min: _min, max: _max, :cos, :sin, :abs, :random} = math
 
 import box_text from require "util"
 
@@ -11,7 +11,7 @@ class World
   energy_count: 0
   energy_needed: 100
 
-  new: (@player) =>
+  new: (@game, @player) =>
     @viewport = EffectViewport scale: 3
     @player.world = @
     @collide = UniformGrid!
@@ -40,7 +40,8 @@ class World
 
     @background = TiledBackground "img/stars.png", @viewport
 
-    @level_progress = HorizBar 80, 6
+    @level_progress = with HorizBar 80, 6
+      .color = { 128, 128 , 255, 128 }
 
   draw_background: =>
     g.push!
@@ -134,11 +135,15 @@ class World
       @colors\render ->
         @draw_hud!
 
-    g.setColor 255,255,255
+    if @start_fadeout
+      elapsed = timer.getTime! - @start_fadeout
+      a = _min(1.0, elapsed / 4) * 255
+      Box(0,0, g.getWidth!, g.getHeight!)\draw {0,0,0,a}
 
-    g.scale 2
-    -- p tostring(timer.getFPS!), 2, 2
-    -- p "Energy: #{@energy_count}", 2, 12
+      if elapsed > 4
+        @game\end_world @
+
+    g.setColor 255,255,255
 
   update: (dt) =>
     @viewport\update dt
@@ -170,12 +175,18 @@ class World
 
     @level_progress.value = _min 1.0, @energy_count / @energy_needed
 
+  ready_to_blow: =>
+    @energy_count >= @energy_needed
+
   blow_up_planet: =>
     @player\take_off ->
+      @viewport\shake 15
       @player.hidden = true
       @seq = Sequence ->
         for i=1,100
           cx, cy = @viewport.x, @viewport.y
+
+          @start_fadeout = timer.getTime! if i == 5
 
           for i=1,3
             x = cx + random! * @viewport.w
