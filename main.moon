@@ -10,6 +10,7 @@ require "enemies"
 require "pickup"
 require "ui"
 require "world"
+require "levels"
 
 require "lovekit.screen_snap"
 
@@ -66,11 +67,16 @@ class Title
       @seq = nil
 
 class Game
+  levels: {
+    Level1
+  }
+
   paused: false
 
   new: =>
     @player = Player 100, 100, @
     @world = World @player
+    @current_level = 1
 
   onload: =>
     sfx\play_music "xmoon"
@@ -107,7 +113,7 @@ class Game
   mousepressed: (x,y) =>
     x, y = @world.viewport\unproject x,y
     -- @world.particles\add EnergyEmitter @world, x,y
-    @world.entities\add Energy, x,y
+    @world.entities\add Energy x,y
     -- print "boom: #{x}, #{y}"
     -- @world.particles\add Explosion @world, x,y
 
@@ -128,11 +134,12 @@ love.load = ->
   sfx\preload {
     "machine-gun"
     "hit1"
+    "hit2"
     "boom"
     "energy-collect"
   }
 
   sfx.play_music = ->
-  dispatch = Dispatcher Title! -- Game! -- Title!
+  dispatch = Dispatcher Game!
   dispatch\bind love
 

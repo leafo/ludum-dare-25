@@ -67,7 +67,7 @@ class Gun
     approach_dir @dir, dir, dt * spin
 
   spawn_bullet: (vel, x,y) =>
-    @tank.world.entities\add @bullet, vel, x,y, @tank
+    @tank.world.entities\add self.bullet vel, x,y, @tank
 
   shoot: (gx, gy) =>
     return if @seq

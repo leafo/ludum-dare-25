@@ -134,7 +134,7 @@ class Player extends Tank
     if @sucking = keyboard.isDown " "
       radius = @suck_radius_box!
       for e in *world.collide\get_touching radius
-        if e.is_energy and and e.alive and not e.gravity_parent
+        if e.is_energy and e.alive and not e.gravity_parent
           table.insert @held_energy, e
           e.gravity_parent = @
     else
@@ -145,10 +145,11 @@ class Player extends Tank
     target_alpha, alpha_rate = if @sucking then 255, 5 else 0, 3
     @ring_alpha = approach @ring_alpha, target_alpha, dt * 255 * alpha_rate
 
-  take_hit: (thing) =>
+  take_hit: (thing, world) =>
     return if @hit_seq
     if thing.is_enemy
-      @world.viewport\shake!
+      sfx\play "hit2"
+      world.viewport\shake!
       @shove thing.box
 
   draw: =>

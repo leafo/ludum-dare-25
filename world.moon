@@ -15,7 +15,7 @@ class World
     @player.world = @
     @collide = UniformGrid!
 
-    @entities = ReuseList!
+    @entities = DrawList!
     @particles = DrawList!
 
     @ground_project = Projector 1.2
@@ -35,7 +35,7 @@ class World
     -- create some enemies
     for xx = 1,2
       for yy = 1,2
-        @entities\add Green, 150 + xx * 40, 150 + yy * 40
+        @entities\add Green 150 + xx * 40, 150 + yy * 40
 
     @background = TiledBackground "img/stars.png", @viewport
 
