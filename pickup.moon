@@ -20,6 +20,7 @@ class Energy extends Box
     super x,y, @size, @size
 
   on_collect: (world) =>
+    sfx\play "energy-collect"
     world.particles\add EnergyEmitter world, @center!
     world.energy_count += 1
     @alive = false

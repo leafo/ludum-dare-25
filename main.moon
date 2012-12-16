@@ -19,7 +19,7 @@ import cos,sin,abs from math
 p = (str, ...) -> g.print str\lower!, ...
 
 export fonts = {}
-export sprite, dispatch
+export sprite, dispatch, sfx
 
 local snapper
 local Game
@@ -145,6 +145,9 @@ class Title
     @shroud_alpha = 0
     @colors = ColorSeparate!
 
+  onload: =>
+    sfx\play_music "xmoon-title"
+
   draw: =>
     @colors\render ->
       @viewport\apply!
@@ -190,6 +193,9 @@ class Game
   new: =>
     @player = Player 100, 100, @
     @world = World @player
+
+  onload: =>
+    sfx\play_music "xmoon"
 
   draw: => @world\draw!
   update: (dt) =>
@@ -239,6 +245,14 @@ love.load = ->
     [[ abcdefghijklmnopqrstuvwxyz-1234567890!.,:;'"?$&]]
 
   g.setFont fonts.main
+
+  export sfx = lovekit.audio.Audio "sounds"
+  sfx\preload {
+    "machine-gun"
+    "hit1"
+    "boom"
+    "energy-collect"
+  }
 
   dispatch = Dispatcher Title!
   dispatch\bind love

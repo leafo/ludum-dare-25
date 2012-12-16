@@ -118,6 +118,13 @@ class MachineGun extends Gun
     sprite: "38,12,6,3"
     size: 1
 
+    on_hit: (...) =>
+      sfx\play "hit1"
+      super ...
+
+  spawn_bullet: (...) =>
+    sfx\play "machine-gun"
+    super ...
 
 class TankGun extends Gun
   recoil_1: 0.1

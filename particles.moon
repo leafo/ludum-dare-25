@@ -27,7 +27,7 @@ class NumberParticle extends Particle
     @accel = Vec2d 0, 400
 
     @dr = (random! - 0.5) * @spread
-  
+
   draw: =>
     p = @p!
     a = linear_step p, 255, 0, 0.5
@@ -138,6 +138,7 @@ class Explosion extends Sequence
 
   new: (@world, x, y) =>
     super ->
+      sfx\play "boom"
       @world.particles\add @.Fire x, y
       @world.particles\add @.Flare x, y
 
