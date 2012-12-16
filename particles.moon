@@ -56,7 +56,7 @@ class SparkEmitter extends Emitter
 class Explosion extends Sequence
   alive: true
 
-  Smoke = class extends Particle
+  Smoke: class extends Particle
     sprite: "64,16,16,16"
     new: (...) =>
       @rot = random! * math.pi / 2
@@ -73,7 +73,7 @@ class Explosion extends Sequence
       scale = 1 + p * 0.5
       sprite\draw @sprite, @x, @y, p * @rot, scale, scale, 8, 8
 
-  Flare = class extends Particle
+  Flare: class extends Particle
     sprite: "48,32,32,32"
     draw: =>
       p = @p!
@@ -88,7 +88,7 @@ class Explosion extends Sequence
       g.setColor @r, @g, @b, a
       sprite\draw @sprite, @x, @y, nil, scale, scale, 16, 16
 
-  Fire = class extends Particle
+  Fire: class extends Particle
     sequence: { 3,4,5,6,7,8,9,10,11 }
 
     new: (x,y) =>
@@ -108,16 +108,16 @@ class Explosion extends Sequence
 
   new: (@world, x, y) =>
     super ->
-      @world.particles\add Fire x, y
-      @world.particles\add Flare x, y
+      @world.particles\add @.Fire x, y
+      @world.particles\add @.Flare x, y
 
       for i=1,3
-        @world.particles\add Smoke x, y
+        @world.particles\add @.Smoke x, y
 
       for i=1,4
         wait 0.1
         rads = random! * math.pi * 2
         offset = Vec2d.from_radians(rads) * (random! * 5 + 5)
-        @world.particles\add Fire x + offset.x, y + offset.y
+        @world.particles\add @.Fire x + offset.x, y + offset.y
 
   draw: =>

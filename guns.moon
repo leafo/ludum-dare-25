@@ -10,6 +10,7 @@ class Bullet extends Box
   alive: true
   is_bullet: true
   speed: -> 130
+  damage: {1,2}
 
   new: (@vel, x, y, @tank) =>
     super x,y, @size, @size
@@ -22,7 +23,18 @@ class Bullet extends Box
   draw: =>
     g.rectangle "line", @x, @y, @w, @h
 
+  -- kill bullet and return damage
+  on_hit: (thing, world) =>
+    @alive = false
+    {min, max} = @damage
+    math.random! * (max - min) + min
+
   __tostring: => "Bullet<#{Box.__tostring self}>"
+
+
+class SpriteBullet extends Bullet
+  draw: =>
+    sprite\draw @sprite, @x, @y, @rads, nil, nil, @ox, @oy
 
 class Gun
   ox: 2
@@ -48,12 +60,14 @@ class Gun
 
   update: (dt) =>
     @time += dt*4
-    if @seq and not @seq\update dt
-      @seq = nil
+    @seq\update dt if @seq
 
   aim_to: (dt, dir) =>
     spin = @spin or @tank.spin
     approach_dir @dir, dir, dt * spin
+
+  spawn_bullet: (vel, x,y) =>
+    @tank.world.entities\add @bullet, vel, x,y, @tank
 
   shoot: (gx, gy) =>
     return if @seq
@@ -77,12 +91,15 @@ class Gun
       unless new_vel\len! < speed
         vel = new_vel
 
-    @tank.world.entities\add @bullet, vel, x,y, @tank
+    @spawn_bullet vel, x, y
 
     @seq = Sequence ->
       ox = @ox
-      tween @, @recoil_1, ox: ox - 2
+      tween @, @recoil_1, ox: ox + 2
       tween @, @recoil_2, ox: ox
+      @seq = nil
+
+    true
 
 class MachineGun extends Gun
   recoil_1: 0.05
@@ -90,13 +107,34 @@ class MachineGun extends Gun
 
   spread: math.pi / 8
 
-  bullet: class extends Bullet
+  bullet: class extends SpriteBullet
+    damage: {1,2}
+
     ox: 4
     oy: 1
-
     sprite: "38,12,6,3"
     size: 1
-    draw: =>
-      sprite\draw @sprite, @x, @y, @rads, nil, nil, @ox, @oy
+
+
+class TankGun extends Gun
+  recoil_1: 0.1
+  recoil_2: 0.4
+
+  bullet: class extends SpriteBullet
+    damage: {8,14}
+
+    ox: 6
+    oy: 2
+    sprite: "35,5,9,5"
+
+    on_hit: (thing, world) =>
+      world.particles\add Explosion.Fire @x, @y
+      super thing, world
+
+class SpreadGun extends Gun
+  recoil_1: 0.1
+  recoil_2: 0.3
+
+  bullet: class extends SpriteBullet
 
 

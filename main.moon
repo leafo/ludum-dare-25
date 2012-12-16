@@ -34,8 +34,8 @@ class Tank
     -- @gun = MachineGun @
     @update_box!
 
-    @mount_gun MachineGun, 0, -4
-    @mount_gun MachineGun, 0, 4
+    -- @mount_gun MachineGun, 0, -4
+    @mount_gun TankGun, 0, 4
 
     if @effects
       @effects\clear @
@@ -157,10 +157,12 @@ class Enemy extends Tank
 
       again!
 
-  take_hit: (thing) =>
+  take_hit: (thing, world) =>
     return if @health < 0
 
     if thing.is_bullet
+      damage = thing\on_hit thing, world
+
       thing.alive = false
       @shove thing, 5, 0.2
 
@@ -168,11 +170,10 @@ class Enemy extends Tank
       bdir = thing.vel\normalized!
       bx, by = unpack bdir * 2 + Vec2d thing\center!
 
-      damage = math.floor math.random! * 2 + 1
       @health -= damage
 
-      with @world.particles
-        \add NumberParticle cx,cy, damage
+      with world.particles
+        \add NumberParticle cx,cy, math.floor damage + 0.5
         \add SparkEmitter @world, bx, by, bdir
 
         if @health <= 0
@@ -291,12 +292,12 @@ class World
           @collide\add e
 
     for thing in *@collide\get_touching @player.box
-      @player\take_hit thing
+      @player\take_hit thing, @
 
     for enemy in *@entities
       continue unless enemy.is_enemy
       for thing in *@collide\get_touching enemy.box
-        enemy\take_hit thing
+        enemy\take_hit thing, @
 
 class Game
   paused: false
