@@ -95,13 +95,14 @@ class Game
   levels: {
     Level1
     Level2
+    Level3
   }
 
   paused: false
 
   new: =>
     @player = Player 100, 100, @
-    @current_level = 0
+    @current_level = 2
     @load_next_world!
 
   load_next_world: =>

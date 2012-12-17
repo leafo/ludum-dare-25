@@ -35,7 +35,7 @@ class World
   energy_count: 0
   energy_needed: 100
 
-  bg_tiles: { 0 }
+  bg_tiles: { {1, 0} }
 
   new: (@game, @player) =>
     @viewport = EffectViewport scale: 3
@@ -52,7 +52,7 @@ class World
 
     picker = TilePicker @bg_tiles
 
-    tile_sprite = Spriter "img/tiles.png", 16, 16, 32
+    tile_sprite = Spriter "img/tiles.png", 16, 16, 16
     tiles = setmetatable { }, {
       __index: (i) =>
         with tile = { tid: picker\pick_rand! }
