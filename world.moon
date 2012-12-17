@@ -6,10 +6,36 @@ import box_text from require "util"
 
 export *
 
+class TilePicker
+  new: (inputs) =>
+    sum = 0
+    for tuple in *inputs
+      sum += tuple[1]
+
+    low = 0
+    @table = for tuple in *inputs
+      {k, v} = tuple
+      with {low, v}
+        low += k / sum
+
+  pick_rand: =>
+    local out
+    r = random!
+    for tuple in *@table
+      {low, val} = tuple
+      if r > low
+        out = val
+      else
+        break
+
+    out, r
+
 class World
   disable_project: false
   energy_count: 0
   energy_needed: 100
+
+  bg_tiles: { 0 }
 
   new: (@game, @player) =>
     @viewport = EffectViewport scale: 3
@@ -24,8 +50,15 @@ class World
 
     @colors = ColorSeparate!
 
-    tile_sprite = Spriter "img/tiles.png", 16
-    tiles = setmetatable { {tid: 0} }, { __index: => @[1] }
+    picker = TilePicker @bg_tiles
+
+    tile_sprite = Spriter "img/tiles.png", 16, 16, 32
+    tiles = setmetatable { }, {
+      __index: (i) =>
+        with tile = { tid: picker\pick_rand! }
+          @[i] = tile
+    }
+
     @map = with TileMap 32, 32
       .sprite = tile_sprite
       \add_tiles tiles

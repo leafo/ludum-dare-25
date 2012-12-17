@@ -182,6 +182,6 @@ love.load = ->
   }
 
   sfx.play_music = ->
-  dispatch = Dispatcher Title! -- Game!
+  dispatch = Dispatcher Game! -- Title! -- Game!
   dispatch\bind love
 
