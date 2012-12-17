@@ -133,6 +133,7 @@ class Game
   }
 
   paused: false
+  show_fps: false
 
   new: =>
     @player = Player 100, 100, @
@@ -151,8 +152,9 @@ class Game
 
   draw: =>
     @world\draw!
-    g.scale 2
-    p tostring(timer.getFPS!), 2, 50
+    if @show_fps
+      g.scale 2
+      p tostring(timer.getFPS!), 2, 50
 
   update: (dt) =>
     return if dt > 0.5
@@ -190,6 +192,8 @@ class Game
           @paused = not @paused
         when "f1"
           .disable_project = not .disable_project
+        when "f3"
+          @show_fps = not @show_fps
     false
 
   mousepressed: (x,y, btn) =>
