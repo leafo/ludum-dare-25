@@ -25,7 +25,7 @@ export sprite, dispatch, sfx
 p = (str, ...) -> g.print str\lower!, ...
 
 local snapper
-local Game, Tutorial
+local Game, Tutorial, Title
 
 class FadeOutScreen
   scale: 3
@@ -108,6 +108,22 @@ class Intermission extends FadeOutScreen
     if key == "return" or key == " "
       @transition @fn
 
+class GameOver extends FadeOutScreen
+  new: (@player, ...) =>
+    super ...
+
+  draw_inner: =>
+    cx, cy = @viewport\center!
+    box_text "Game Over", cx, cy - 10
+    box_text "Score: #{@player.score}", cx, cy + 10
+
+    box_text "Press Enter To Return To Title", cx, cy + 30
+
+  on_key: (key) =>
+    if key == "return" or key == " "
+      @transition ->
+        dispatch\reset Title!
+
 class Game
   levels: {
     Level1
@@ -149,8 +165,11 @@ class Game
     snapper\tick! if snapper
 
   end_world: =>
-    dispatch\push Intermission ->
-      @load_next_world!
+    if @player.health <= 0
+      dispatch\push GameOver @player
+    else
+      dispatch\push Intermission ->
+        @load_next_world!
 
   on_key: (key) =>
     with @world

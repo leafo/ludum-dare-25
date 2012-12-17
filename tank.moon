@@ -182,7 +182,7 @@ class Player extends Tank
       dt * ((@score - @display_score) * 1.5 + 14)
 
   take_hit: (thing, world) =>
-    return if @hit_seq
+    return if @hit_seq or @locked
 
     damage = if thing.is_enemy
       sfx\play "hit2"
@@ -205,9 +205,9 @@ class Player extends Tank
       @health -= damage
       if @health < 0
         world.particles\add Explosion world, cx, cy
-
         @locked = true
-        @dead_time = timer.getTime!
+        @hidden = true
+        world.start_fadeout = timer.getTime!
 
   enemy_killed: (thing, world) =>
     @score += thing.score if thing.score
