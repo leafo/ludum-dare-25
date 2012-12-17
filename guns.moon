@@ -12,6 +12,8 @@ class Bullet extends Box
   speed: -> 130
   damage: {1,2}
 
+  hurts_player: true
+
   new: (@vel, x, y, @tank) =>
     super x,y, @size, @size
     @rads = @vel\normalized!\radians!
@@ -112,6 +114,8 @@ class MachineGun extends Gun
   spread: math.pi / 8
 
   bullet: class extends SpriteBullet
+    hurts_player: false
+
     damage: {2,4}
 
     ox: 4

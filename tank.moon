@@ -125,6 +125,8 @@ class Player extends Tank
   score: 0
   display_score: 0
 
+  line: 50
+
   inner_ring: {
     sprite: "101,133,22,22"
     size: 22
@@ -139,6 +141,8 @@ class Player extends Tank
     super x,y
     @held_energy = {}
     @ring_alpha = 0
+
+    @life = @@life
 
   loadout: =>
     -- @mount_gun MachineGun, 0, -4
@@ -179,10 +183,13 @@ class Player extends Tank
 
   take_hit: (thing, world) =>
     return if @hit_seq
+
     if thing.is_enemy
       sfx\play "hit2"
       world.viewport\shake!
       @shove thing.box
+
+    if thing.is_bullet
 
   enemy_killed: (thing, world) =>
     @score += thing.score if thing.score

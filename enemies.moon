@@ -14,18 +14,26 @@ class Enemy extends Tank
     super ...
     @health = @@health
     @ai = Sequence ->
+      wait math.random!
+
       dir = Vec2d.random!
       during 0.5, (dt) ->
         @move dt, dir
 
-      pt = Vec2d.random! * 50 + Vec2d @x, @y
-      during 0.5, (dt) ->
-        if @aim_to dt, pt
-          "cancel"
+      -- if player is in range, shoiot
+      player_pos = Vec2d @world.player.x, @world.player.y
+      vec = player_pos - Vec2d @x, @y
 
-      @shoot dt
-      wait 1.0
+      if vec\len! < 250 and math.random! > 0.5
+        during 0.5, (dt) ->
+          if @aim_to dt, player_pos
+            "cancel"
+        @shoot dt
+      else
+        during 1.0, (dt) ->
+          @move dt, vec\normalized!
 
+      wait math.random!
       again!
 
   take_hit: (thing, world) =>
@@ -61,21 +69,29 @@ class Enemy extends Tank
   __tostring: => "Enemy<#{@box}>"
 
 class Green extends Enemy
+  score: 78
+
   ox: 7
   oy: 6
   sprite: "17,34,14,12"
 
 class Blue extends Enemy
+  score: 128
+
   ox: 9
   oy: 7
   sprite: "17,49,15,14"
 
 class Red extends Enemy
+  score: 179
+
   ox: 5
   oy: 7
   spite: "17,65,14,14"
 
 class Orange extends Enemy
+  score: 205
+
   ox: 8
   oy: 6
   spite: "15,81,17,12"
@@ -86,6 +102,4 @@ gun_sprites = {
   red: "35,70,8,4"
   orange: "35,85,8,4"
 }
-
-
 
