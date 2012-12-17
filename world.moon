@@ -67,9 +67,15 @@ class World
     @bomb_pad = BombPad 80, 80
 
     -- create some enemies
+    es = {
+      Green, Blue, Red, Orange
+    }
+    k = 1
     for xx = 1,2
       for yy = 1,2
-        @entities\add Green 150 + xx * 40, 150 + yy * 40
+        @entities\add es[k] 150 + xx * 40, 150 + yy * 40
+        k = k + 1
+        k = 1 if k > #es
 
     @background = TiledBackground "img/stars.png", @viewport
 

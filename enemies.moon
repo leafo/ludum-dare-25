@@ -70,6 +70,7 @@ class Enemy extends Tank
 
 class Green extends Enemy
   score: 78
+  health: 40
 
   ox: 7
   oy: 6
@@ -77,24 +78,39 @@ class Green extends Enemy
 
 class Blue extends Enemy
   score: 128
+  health: 60
 
   ox: 9
   oy: 7
   sprite: "17,49,15,14"
 
+  loadout: =>
+    @mount_gun TankGun, 0, -3
+    @mount_gun TankGun, 0, 3
+
+
 class Red extends Enemy
   score: 179
+  health: 70
 
   ox: 5
   oy: 7
-  spite: "17,65,14,14"
+  sprite: "17,65,14,14"
+
+  loadout: =>
+    @mount_gun SpreadGun, 0, 0
 
 class Orange extends Enemy
   score: 205
+  health: 80
 
   ox: 8
   oy: 6
-  spite: "15,81,17,12"
+  sprite: "15,81,17,12"
+
+  loadout: =>
+    @mount_gun SpreadGun, 1, 1
+    @mount_gun TankGun, -1, -1
 
 gun_sprites = {
   green: "35,38,8,4"
