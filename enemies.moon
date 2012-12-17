@@ -1,4 +1,7 @@
 
+import random, floor from math
+{graphics: g} = love
+
 export *
 
 class Enemy extends Tank
@@ -118,4 +121,36 @@ gun_sprites = {
   red: "35,70,8,4"
   orange: "35,85,8,4"
 }
+
+class EnemySpawner extends Sequence
+  range: {15, 25}
+
+  draw: =>
+    -- g.setColor 255,255,255
+    -- g.point unpack @center
+
+  new: (world, x,y, types, num_enemies={2,6}) =>
+    @center = Vec2d x, y
+    @enemies = {}
+    super ->
+      wait random! * 2
+      num = random unpack num_enemies
+      for i=1,num
+        offset = Vec2d.random! * random unpack @range
+        enemy_cls = types[random #types]
+        enemy = enemy_cls unpack @center + offset
+        table.insert @enemies, enemy
+        world.entities\add enemy
+
+      while true
+        wait 1.0
+        all_dead = true
+        for e in *@enemies
+          all_dead = false if e.alive
+
+        break if all_dead
+
+      wait 4 + math.random! * 2
+      @enemies = {}
+      again!
 

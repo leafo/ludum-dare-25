@@ -40,6 +40,8 @@ class World
   new: (@game, @player) =>
     @viewport = EffectViewport scale: 3
     @player.world = @
+    @player\reset!
+
     @collide = UniformGrid!
 
     @entities = DrawList!
@@ -66,23 +68,23 @@ class World
     @map_box = Box 0,0, @map.real_width, @map.real_height
     @bomb_pad = BombPad 80, 80
 
-    -- create some enemies
-    es = {
-      Green, Blue, Red, Orange
-    }
-    k = 1
-    for xx = 1,2
-      for yy = 1,2
-        @entities\add es[k] 150 + xx * 40, 150 + yy * 40
-        k = k + 1
-        k = 1 if k > #es
-
     @background = TiledBackground "img/stars.png", @viewport
 
     @level_progress = with HorizBar 80, 6
       .color = { 128, 128 , 255, 128 }
 
     @health_bar = HorizBar 80, 6
+
+    @prepare_enemies!
+
+  prepare_enemies: =>
+    return unless @enemy_types
+    num = @num_spawns or 2
+
+    bounds = @map\to_box!\shrink 120
+    for i=1,num
+      x,y = bounds\random_point!
+      @particles\add EnemySpawner @,x,y, @enemy_types
 
   draw_background: =>
     g.push!

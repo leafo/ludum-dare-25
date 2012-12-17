@@ -144,6 +144,11 @@ class Player extends Tank
 
     @health = @@health
 
+  reset: =>
+    @health = @@health
+    @locked = false
+    @hidden = false
+
   loadout: =>
     @mount_gun MachineGun, 0, -4
     @mount_gun MachineGun, 0, 4

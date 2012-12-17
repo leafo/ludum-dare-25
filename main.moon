@@ -14,7 +14,7 @@ require "levels"
 
 require "lovekit.screen_snap"
 
-{graphics: g, :timer, :mouse} = love
+{graphics: g, :timer, :mouse, :keyboard} = love
 {floor: f, min: _min, :cos, :sin, :abs} = math
 
 import box_text from require "util"
@@ -58,7 +58,6 @@ class FadeOutScreen
       tween @, 1.0, shroud_alpha: 255
       fn!
       @shroud_alpha = 0
-      @seq = nil
 
   transition_to: (state) =>
     @transition -> dispatch\push state
@@ -69,6 +68,7 @@ class Title extends FadeOutScreen
     super ...
 
   onload: =>
+    print "loading title..."
     sfx\play_music "xmoon-title"
 
   draw_inner: =>
@@ -96,12 +96,12 @@ class Tutorial extends FadeOutScreen
       @transition_to Game!
 
 class Intermission extends FadeOutScreen
-  new: (@fn, ...) =>
+  new: (@game, @fn, ...) =>
     super ...
 
   draw_inner: =>
     cx, cy = @viewport\center!
-    box_text "Congratulations", cx, cy - 10
+    box_text "You Beat Level #{@game.current_level}", cx, cy - 10
     box_text "Press Enter To Go To Next Level", cx, cy + 10
 
   on_key: (key) =>
@@ -129,6 +129,7 @@ class Game
     Level1
     Level2
     Level3
+    Endless
   }
 
   paused: false
@@ -141,7 +142,8 @@ class Game
   load_next_world: =>
     @current_level += 1
     w = @levels[@current_level]
-    error "Ran out of levels!" unless w
+    w = @levels[#@levels] unless w
+
     @world = w @, @player
 
   onload: =>
@@ -168,7 +170,8 @@ class Game
     if @player.health <= 0
       dispatch\push GameOver @player
     else
-      dispatch\push Intermission ->
+      dispatch\push Intermission @, ->
+        dispatch\pop!
         @load_next_world!
 
   on_key: (key) =>
@@ -191,10 +194,10 @@ class Game
 
   mousepressed: (x,y, btn) =>
     x, y = @world.viewport\unproject x,y
-    -- @world.particles\add EnergyEmitter @world, x,y
-
-    if btn == "r"
+    if btn == "r" and keyboard.isDown "f2"
       @world.entities\add Energy x,y
+
+    -- @world.particles\add EnergyEmitter @world, x,y
     -- print "boom: #{x}, #{y}"
     -- @world.particles\add Explosion @world, x,y
 
@@ -221,7 +224,6 @@ love.load = ->
     "energy-collect"
   }
 
-  sfx.play_music = ->
-  dispatch = Dispatcher Game! -- Tutorial! -- Game!
+  dispatch = Dispatcher Title!
   dispatch\bind love
 
