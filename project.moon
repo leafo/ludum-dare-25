@@ -3,6 +3,12 @@
 
 export *
 
+setCanvas = (canvas) ->
+  if canvas
+    g.setCanvas canvas
+  else
+    g.setCanvas!
+
 class Glow
   new: (@scale=0.5) =>
     @canvas = g.newCanvas g.getWidth! * @scale, g.getHeight! * @scale
@@ -18,7 +24,7 @@ class Glow
     g.scale @scale, @scale
     fn!
     g.pop!
-    g.setCanvas old_canvas
+    setCanvas old_canvas
 
     fn!
     g.setColor 255,255,255,100
@@ -53,7 +59,7 @@ class Projector
       float P = length(pos);
       float C = asin(P/R);
 
-      float long = long_0 + atan(
+      float _long = long_0 + atan(
         pos.x * sin(C),
         (P * cos(lat_0) * cos(C) - pos.y * sin(long_0) * sin(C))
       );
@@ -65,9 +71,9 @@ class Projector
       );
 
       lat *= 1.8;
-      long *= 0.8;
+      _long *= 0.8;
 
-      vec2 source = (vec2(long, lat) / PI * 2 + 1) / 2;
+      vec2 source = (vec2(_long, lat) / PI * 2 + 1) / 2;
 
 
       float darken = min(1, 1.1 - pow(length(pos) / R, 5));
@@ -88,7 +94,7 @@ class Projector
     g.setCanvas @canvas
     @canvas\clear 0,0,0,0
     fn!
-    g.setCanvas old_canvas
+    setCanvas old_canvas
 
     g.setBlendMode "premultiplied"
     g.setPixelEffect @effect unless @disabled
@@ -135,7 +141,7 @@ class ColorSeparate
     g.setCanvas @canvas
     @canvas\clear 0,0,0,0
     fn!
-    g.setCanvas old_canvas
+    setCanvas old_canvas
 
     g.setBlendMode "premultiplied"
     g.setPixelEffect @effect unless @disabled
