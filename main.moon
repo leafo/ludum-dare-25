@@ -25,11 +25,13 @@ export sprite, dispatch, sfx
 p = (str, ...) -> g.print str\lower!, ...
 
 local snapper
-local Game
+local Game, Tutorial
 
 class FadeOutScreen
+  scale: 3
+  base_factor: 75
   new: =>
-    @viewport = EffectViewport scale: 3
+    @viewport = EffectViewport scale: @scale
     @shroud_alpha = 0
     @colors = ColorSeparate!
 
@@ -37,7 +39,7 @@ class FadeOutScreen
 
   update: (dt) =>
     @seq\update dt if @seq
-    @colors.factor = math.sin(timer.getTime! * 3) * 25 + 75
+    @colors.factor = math.sin(timer.getTime! * 3) * 25 + @base_factor
 
   draw: =>
     @colors\render ->
@@ -73,6 +75,21 @@ class Title extends FadeOutScreen
     @title_image\draw 0,0
     cx, cy = @viewport\center!
     box_text "Press Enter To Begin", cx, cy - 10
+
+  on_key: (key) =>
+    if key == "return" or key == " "
+      @transition_to Tutorial!
+
+class Tutorial extends FadeOutScreen
+  scale: 1.5
+  base_factor: 300
+
+  new: (...) =>
+    @tut_image = imgfy "img/tutorial.png"
+    super ...
+
+  draw_inner: =>
+    @tut_image\draw 0,0
 
   on_key: (key) =>
     if key == "return" or key == " "
@@ -185,6 +202,6 @@ love.load = ->
   }
 
   sfx.play_music = ->
-  dispatch = Dispatcher Game! -- Title! -- Game!
+  dispatch = Dispatcher Tutorial! -- Game!
   dispatch\bind love
 
