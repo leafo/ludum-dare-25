@@ -76,6 +76,8 @@ class World
     @level_progress = with HorizBar 80, 6
       .color = { 128, 128 , 255, 128 }
 
+    @health_bar = HorizBar 80, 6
+
   draw_background: =>
     g.push!
     g.scale @viewport.screen.scale
@@ -144,6 +146,7 @@ class World
     box_text "Score: #{score}", 10, 20, false
 
     @level_progress\draw w - 10 - @level_progress.w, 7
+    @health_bar\draw (w - @health_bar.w)/2, h - @health_bar.h - 8
 
     if @energy_count >= @energy_needed and timer.getTime! % 1 >= 0.5
       box_text "Press E", w - 10, 20, 1.0
@@ -208,6 +211,7 @@ class World
         enemy\take_hit thing, @
 
     @level_progress.value = _min 1.0, @energy_count / @energy_needed
+    @health_bar.value = _max 0, @player.health / @player.__class.health
 
   ready_to_blow: =>
     @energy_count >= @energy_needed

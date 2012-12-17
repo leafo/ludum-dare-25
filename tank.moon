@@ -125,7 +125,7 @@ class Player extends Tank
   score: 0
   display_score: 0
 
-  line: 50
+  health: 50
 
   inner_ring: {
     sprite: "101,133,22,22"
@@ -142,12 +142,12 @@ class Player extends Tank
     @held_energy = {}
     @ring_alpha = 0
 
-    @life = @@life
+    @health = @@health
 
   loadout: =>
-    -- @mount_gun MachineGun, 0, -4
-    -- @mount_gun MachineGun, 0, 4
-    @mount_gun SpreadGun, 0, 0
+    @mount_gun MachineGun, 0, -4
+    @mount_gun MachineGun, 0, 4
+    -- @mount_gun SpreadGun, 0, 0
 
   shoot: (...) =>
     return if @sucking
@@ -184,12 +184,30 @@ class Player extends Tank
   take_hit: (thing, world) =>
     return if @hit_seq
 
-    if thing.is_enemy
+    damage = if thing.is_enemy
       sfx\play "hit2"
       world.viewport\shake!
       @shove thing.box
+      math.random! * 2 + 8
+    elseif thing.is_bullet and thing.hurts_player
+      world.viewport\shake!
+      @shove thing
+      thing\on_hit @, world
 
-    if thing.is_bullet
+    if damage
+      cx, cy = @box\center!
+      p = with NumberParticle cx,cy, math.floor(damage + 0.5)
+        .g = 100
+        .b = 100
+
+      world.particles\add p
+
+      @health -= damage
+      if @health < 0
+        world.particles\add Explosion world, cx, cy
+
+        @locked = true
+        @dead_time = timer.getTime!
 
   enemy_killed: (thing, world) =>
     @score += thing.score if thing.score
@@ -212,7 +230,6 @@ class Player extends Tank
         scale, nil, half, half
 
       g.setColor 255,255,255, 255
-
       -- @suck_radius_box!\outline!
 
   suck_radius_box: =>

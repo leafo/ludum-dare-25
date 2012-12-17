@@ -39,7 +39,7 @@ class Enemy extends Tank
   take_hit: (thing, world) =>
     return if @health < 0
 
-    if thing.is_bullet
+    if thing.is_bullet and not thing.hurts_player
       damage = thing\on_hit thing, world
 
       thing.alive = false
