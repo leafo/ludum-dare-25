@@ -25,6 +25,7 @@ class Bullet extends Box
 
   -- kill bullet and return damage
   on_hit: (thing, world) =>
+    sfx\play "hit1"
     @alive = false
     {min, max} = @damage
     math.random! * (max - min) + min
@@ -118,10 +119,6 @@ class MachineGun extends Gun
     sprite: "38,12,6,3"
     size: 1
 
-    on_hit: (...) =>
-      sfx\play "hit1"
-      super ...
-
   spawn_bullet: (...) =>
     sfx\play "machine-gun"
     super ...
@@ -131,7 +128,7 @@ class TankGun extends Gun
   recoil_2: 0.4
 
   bullet: class extends SpriteBullet
-    damage: {8,14}
+    damage: {8,16}
 
     ox: 6
     oy: 2
@@ -141,10 +138,27 @@ class TankGun extends Gun
       world.particles\add Explosion.Fire @x, @y
       super thing, world
 
+  spawn_bullet: (...) =>
+    sfx\play "shoot1"
+    super ...
+
 class SpreadGun extends Gun
   recoil_1: 0.1
   recoil_2: 0.3
 
   bullet: class extends SpriteBullet
+    ox: 3
+    oy: 3
+    damage: {6,7}
+    sprite: "40,18,7,7"
 
+  spawn_bullet: (vel, x,y) =>
+    sfx\play "shoot1"
+
+    left = vel\rotate -0.2
+    right = vel\rotate 0.2
+
+    @tank.world.entities\add self.bullet left, x,y, @tank
+    @tank.world.entities\add self.bullet vel, x,y, @tank
+    @tank.world.entities\add self.bullet right, x,y, @tank
 

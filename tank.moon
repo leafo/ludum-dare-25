@@ -141,8 +141,9 @@ class Player extends Tank
     @ring_alpha = 0
 
   loadout: =>
-    @mount_gun MachineGun, 0, -4
-    @mount_gun MachineGun, 0, 4
+    -- @mount_gun MachineGun, 0, -4
+    -- @mount_gun MachineGun, 0, 4
+    @mount_gun SpreadGun, 0, 0
 
   shoot: (...) =>
     return if @sucking

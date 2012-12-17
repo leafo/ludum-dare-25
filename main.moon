@@ -119,7 +119,7 @@ class Game
 
   new: =>
     @player = Player 100, 100, @
-    @current_level = 2
+    @current_level = 0
     @load_next_world!
 
   load_next_world: =>
@@ -197,11 +197,12 @@ love.load = ->
     "machine-gun"
     "hit1"
     "hit2"
+    "shoot1"
     "boom"
     "energy-collect"
   }
 
   sfx.play_music = ->
-  dispatch = Dispatcher Tutorial! -- Game!
+  dispatch = Dispatcher Game! -- Tutorial! -- Game!
   dispatch\bind love
 
