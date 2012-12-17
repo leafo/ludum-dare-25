@@ -185,6 +185,8 @@ class Player extends Tank
 
   enemy_killed: (thing, world) =>
     @score += thing.score if thing.score
+    if math.random! > 0.5
+      world.entities\add Energy thing.x, thing.y
 
   draw: =>
     super!

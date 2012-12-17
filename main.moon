@@ -153,10 +153,12 @@ class Game
           .disable_project = not .disable_project
     false
 
-  mousepressed: (x,y) =>
+  mousepressed: (x,y, btn) =>
     x, y = @world.viewport\unproject x,y
     -- @world.particles\add EnergyEmitter @world, x,y
-    -- @world.entities\add Energy x,y
+
+    if btn == "r"
+      @world.entities\add Energy x,y
     -- print "boom: #{x}, #{y}"
     -- @world.particles\add Explosion @world, x,y
 
