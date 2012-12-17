@@ -24,18 +24,19 @@ massive bomb. Detonate the bomb when it's fully charged to destroy the planet.
 Watch out, those pesky colonists are armed with some pretty advanced tech! 
 
 Includes:
-	* 4 enemy types
-	* 3 environments
-	* Endless random levels
-	* 2 awesome shaders
-	* 2 music tracks
+
+ * 4 enemy types
+ * 3 environments
+ * Endless random levels
+ * 2 awesome shaders
+ * 2 music tracks
 
 ### Controls
 
-W A S D - Move 
-Mouse - Aim and Shoot 
-E - Detonate bomb when it's charged 
-Space - Active tractor beam to pull energy
+* W A S D - Move 
+* Mouse - Aim and Shoot 
+* E - Detonate bomb when it's charged 
+* Space - Active tractor beam to pull energy
 
 Press Enter to advance through screens. Press F1 to disable shaders during
 game. F3 to toggle fps during game. 
