@@ -109,13 +109,13 @@ class Intermission extends FadeOutScreen
       @transition @fn
 
 class GameOver extends FadeOutScreen
-  new: (@player, ...) =>
+  new: (@player, @game, ...) =>
     super ...
 
   draw_inner: =>
     cx, cy = @viewport\center!
     box_text "Game Over", cx, cy - 10
-    box_text "Score: #{@player.score}", cx, cy + 10
+    box_text "Score: #{@player.score} - Level: #{@game.current_level}", cx, cy + 10
 
     box_text "Press Enter To Return To Title", cx, cy + 30
 
@@ -168,7 +168,7 @@ class Game
 
   end_world: =>
     if @player.health <= 0
-      dispatch\push GameOver @player
+      dispatch\push GameOver @player, @
     else
       dispatch\push Intermission @, ->
         dispatch\pop!
