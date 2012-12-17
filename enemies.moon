@@ -56,10 +56,10 @@ class Enemy extends Tank
 
       with world.particles
         \add NumberParticle cx,cy, math.floor damage + 0.5
-        \add SparkEmitter @world, bx, by, bdir
+        \add SparkEmitter world, bx, by, bdir
 
         if @health <= 0
-          \add Explosion @world, cx, cy
+          \add Explosion world, cx, cy
           world.player\enemy_killed @, world
 
 
