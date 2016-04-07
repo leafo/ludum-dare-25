@@ -101,7 +101,7 @@ class World
 
   draw_entities: =>
     @viewport\apply!
-    @player\draw dt
+    @player\draw!
     @entities\draw!
     @particles\draw!
     g.setColor 255,255,255,255
