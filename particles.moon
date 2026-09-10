@@ -30,9 +30,9 @@ class NumberParticle extends Particle
 
   draw: =>
     p = @p!
-    a = linear_step p, 255, 0, 0.5
+    a = linear_step p, 1, 0, 0.5
 
-    g.setColor @r, @g, @b, a
+    g.setColor @r/255, @g/255, @b/255, a
     g.push!
     g.translate @x, @y
     g.print @str, 0,0, p * @dr, nil, nil, 4,4
@@ -71,8 +71,7 @@ class EnergyEmitter extends Emitter
 
     draw: =>
       p = @p!
-      a = (1 - p) * 255
-      g.setColor @r, @g, @b, a
+      g.setColor @r/255, @g/255, @b/255, 1 - p
       sprite\draw @sprite, @x, @y, p * @rot, nil, nil, @ox, @oy
 
   new: (world, x, y) =>
@@ -96,9 +95,7 @@ class Explosion extends Sequence
 
     draw: =>
       p = @p!
-      a = (1 - p) * 255
-
-      g.setColor @r, @g, @b, a
+      g.setColor @r/255, @g/255, @b/255, 1 - p
 
       scale = 1 + p * 0.5
       sprite\draw @sprite, @x, @y, p * @rot, scale, scale, 8, 8
@@ -109,13 +106,13 @@ class Explosion extends Sequence
       p = @p!
 
       a = if p < 0.5
-        p * 2 * 255
+        p * 2
       else
-        (1 - p) * 2 * 255
+        (1 - p) * 2
 
       scale = @p! * 2 + 0.3
 
-      g.setColor @r, @g, @b, a
+      g.setColor @r/255, @g/255, @b/255, a
       sprite\draw @sprite, @x, @y, nil, scale, scale, 16, 16
 
   Fire: class extends Particle
@@ -131,9 +128,9 @@ class Explosion extends Sequence
       super dt
 
     draw: =>
-      a = linear_step @p!, 255,0, 0.5
+      a = linear_step @p!, 1,0, 0.5
 
-      g.setColor @r, @g, @b, a
+      g.setColor @r/255, @g/255, @b/255, a
       @anim\draw @x - 8, @y - 8
 
   new: (@world, x, y) =>

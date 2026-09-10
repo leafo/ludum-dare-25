@@ -55,13 +55,11 @@ class World
     picker = TilePicker @bg_tiles
 
     tile_sprite = Spriter "img/tiles.png", 16, 16, 16
-    tiles = setmetatable { }, {
-      __index: (i) =>
-        with tile = { tid: picker\pick_rand! }
-          @[i] = tile
-    }
+    map_w, map_h = 32, 32
+    tiles = for i=1,map_w * map_h
+      { tid: picker\pick_rand! }
 
-    @map = with TileMap 32, 32
+    @map = with TileMap map_w, map_h
       .sprite = tile_sprite
       \add_tiles tiles
 
@@ -71,7 +69,7 @@ class World
     @background = TiledBackground "img/stars.png", @viewport
 
     @level_progress = with HorizBar 80, 6
-      .color = { 128, 128 , 255, 128 }
+      .color = { 128/255, 128/255, 1, 128/255 }
 
     @health_bar = HorizBar 80, 6
 
@@ -88,7 +86,7 @@ class World
 
   draw_background: =>
     g.push!
-    g.scale @viewport.screen.scale
+    g.scale @viewport.scale
     @background\draw -@viewport.x, -@viewport.y
     g.pop!
 
@@ -104,7 +102,7 @@ class World
     @player\draw!
     @entities\draw!
     @particles\draw!
-    g.setColor 255,255,255,255
+    g.setColor 1,1,1,1
 
     @viewport\pop!
 
@@ -121,15 +119,15 @@ class World
       continue unless e.alive
 
       cx, cy, rr,gg,bb = if e.is_enemy
-        e.x, e.y, 255,100,100
+        e.x, e.y, 1,100/255,100/255
       elseif e.is_energy
         ex,ey = e\center!
-        ex, ey, 140,140,255, 180
+        ex, ey, 140/255,140/255,1
       else
         continue
 
       to_thing = Vec2d(cx - @player.x, cy - @player.y)
-      aa = _min(0.8, to_thing\len! / 100) * 255
+      aa = _min(0.8, to_thing\len! / 100)
 
       vec = to_thing\normalized!
 
@@ -137,13 +135,13 @@ class World
       vec[2] = -0.8 if vec[2] < -0.8
 
       g.setColor rr,gg,bb, aa
-      g.point unpack vec
+      g.points unpack vec
 
-    g.setColor 255,255,255,255
+    g.setColor 1,1,1,1
     g.pop!
 
     g.push!
-    g.scale @viewport.screen.scale
+    g.scale @viewport.scale
 
     w = w/3
     h = h/3
@@ -188,7 +186,7 @@ class World
       if elapsed > 4
         @game\end_world @
 
-    g.setColor 255,255,255
+    g.setColor 1,1,1
 
   update: (dt) =>
     @viewport\update dt

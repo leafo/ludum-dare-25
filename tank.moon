@@ -1,5 +1,5 @@
 
-{:effects} = lovekit
+effects = require "lovekit.effects"
 {graphics: g, :timer, :mouse, :keyboard} = love
 
 {:sin, :cos, :min} = math
@@ -13,7 +13,7 @@ class FlyOut extends effects.Effect
     g.push!
     p = @p!
     g.scale p*2 + 1
-    g.setColor 255,255,255, (1 - p) * 255
+    g.setColor 1,1,1, 1 - p
 
   after: =>
     g.pop!
@@ -63,7 +63,7 @@ class Tank
       @update_box!
 
   shove: (box, dist=10, dur=0.3) =>
-    @effects\add effects.Flash!
+    @effects\add effects.FlashEffect!
     @hit_seq = Sequence ->
       dir = box\vector_to(@box)\normalized! * dist
       tween @, dur, x: @x + dir.x, y: @y + dir.y
@@ -169,7 +169,7 @@ class Player extends Tank
     mpos = Vec2d world.viewport\unproject mouse.getPosition!
     @aim_to dt, mpos
 
-    if @sucking = keyboard.isDown " "
+    if @sucking = keyboard.isDown "space"
       radius = @suck_radius_box!
       for e in *world.collide\get_touching radius
         if e.is_energy and e.alive and not e.gravity_parent
@@ -180,8 +180,8 @@ class Player extends Tank
         e.gravity_parent = nil
       @held_energy = {}
 
-    target_alpha, alpha_rate = if @sucking then 255, 5 else 0, 3
-    @ring_alpha = approach @ring_alpha, target_alpha, dt * 255 * alpha_rate
+    target_alpha, alpha_rate = if @sucking then 1, 5 else 0, 3
+    @ring_alpha = approach @ring_alpha, target_alpha, dt * alpha_rate
 
     @display_score = approach @display_score, @score,
       dt * ((@score - @display_score) * 1.5 + 14)
@@ -225,7 +225,7 @@ class Player extends Tank
       t = timer.getTime()
       scale = 1.0 + sin(t * 8) * 0.1
 
-      g.setColor 255,255,255, @ring_alpha
+      g.setColor 1,1,1, @ring_alpha
       half = @outer_ring.size / 2
       sprite\draw @outer_ring.sprite, @x, @y, t * 4,
         scale, nil, half, half
@@ -234,7 +234,7 @@ class Player extends Tank
       sprite\draw @inner_ring.sprite, @x, @y, t * -5,
         scale, nil, half, half
 
-      g.setColor 255,255,255, 255
+      g.setColor 1,1,1, 1
       -- @suck_radius_box!\outline!
 
   suck_radius_box: =>

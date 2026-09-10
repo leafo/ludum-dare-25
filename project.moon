@@ -13,13 +13,13 @@ class Glow
   new: (@scale=0.5) =>
     @canvas = g.newCanvas g.getWidth! * @scale, g.getHeight! * @scale
     -- @canvas\setFilter "nearest", "nearest"
-    @effect = g.newPixelEffect @shader!
+    @effect = g.newShader @shader!
 
   render: (fn) =>
     old_canvas = g.getCanvas!
 
     g.setCanvas @canvas
-    @canvas\clear 0,0,0,0
+    g.clear 0,0,0,0
     g.push!
     g.scale @scale, @scale
     fn!
@@ -27,14 +27,14 @@ class Glow
     setCanvas old_canvas
 
     fn!
-    g.setColor 255,255,255,100
+    g.setColor 1,1,1,100/255
 
     g.push!
     g.scale 1/@scale, 1/@scale
     g.draw @canvas, 0,0
     g.pop!
 
-    g.setColor 255,255,255,255
+    g.setColor 1,1,1,1
 
 
 class Projector
@@ -86,21 +86,21 @@ class Projector
   new: (@radius=1.2) =>
     @canvas = g.newCanvas!
     @canvas\setFilter "nearest", "nearest"
-    @effect = g.newPixelEffect @shader!
+    @effect = g.newShader @shader!
 
   render: (fn) =>
     old_canvas = g.getCanvas!
 
     g.setCanvas @canvas
-    @canvas\clear 0,0,0,0
+    g.clear 0,0,0,0
     fn!
     setCanvas old_canvas
 
-    g.setBlendMode "premultiplied"
-    g.setPixelEffect @effect unless @disabled
+    g.setBlendMode "alpha", "premultiplied"
+    g.setShader @effect unless @disabled
     @effect\send "R", @radius
     g.draw @canvas, 0,0
-    g.setPixelEffect!
+    g.setShader!
     g.setBlendMode "alpha"
 
 
@@ -133,21 +133,21 @@ class ColorSeparate
     @canvas = g.newCanvas!
     @canvas\setFilter "nearest", "nearest"
     @canvas\setWrap "repeat", "repeat"
-    @effect = g.newPixelEffect @shader!
+    @effect = g.newShader @shader!
 
   render: (fn) =>
     old_canvas = g.getCanvas!
 
     g.setCanvas @canvas
-    @canvas\clear 0,0,0,0
+    g.clear 0,0,0,0
     fn!
     setCanvas old_canvas
 
-    g.setBlendMode "premultiplied"
-    g.setPixelEffect @effect unless @disabled
+    g.setBlendMode "alpha", "premultiplied"
+    g.setShader @effect unless @disabled
     @effect\send "factor", @factor
     g.draw @canvas, 0,0
-    g.setPixelEffect!
+    g.setShader!
     g.setBlendMode "alpha"
 
 

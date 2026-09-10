@@ -49,7 +49,7 @@ class FadeOutScreen
       if @shroud_alpha > 0
         @viewport\draw {0,0,0, @shroud_alpha}
 
-      g.setColor 255,255,255,255
+      g.setColor 1,1,1,1
       @viewport\pop!
 
   transition: (fn) =>
@@ -67,7 +67,7 @@ class Title extends FadeOutScreen
     @title_image = imgfy "img/title.png"
     super ...
 
-  onload: =>
+  on_show: =>
     print "loading title..."
     sfx\play_music "xmoon-title"
 
@@ -77,7 +77,7 @@ class Title extends FadeOutScreen
     box_text "Press Enter To Begin", cx, cy - 10
 
   on_key: (key) =>
-    if key == "return" or key == " "
+    if key == "return" or key == "space"
       @transition_to Tutorial!
 
 class Tutorial extends FadeOutScreen
@@ -92,7 +92,7 @@ class Tutorial extends FadeOutScreen
     @tut_image\draw 0,0
 
   on_key: (key) =>
-    if key == "return" or key == " "
+    if key == "return" or key == "space"
       @transition_to Game!
 
 class Intermission extends FadeOutScreen
@@ -105,7 +105,7 @@ class Intermission extends FadeOutScreen
     box_text "Press Enter To Go To Next Level", cx, cy + 10
 
   on_key: (key) =>
-    if key == "return" or key == " "
+    if key == "return" or key == "space"
       @transition @fn
 
 class GameOver extends FadeOutScreen
@@ -120,7 +120,7 @@ class GameOver extends FadeOutScreen
     box_text "Press Enter To Return To Title", cx, cy + 30
 
   on_key: (key) =>
-    if key == "return" or key == " "
+    if key == "return" or key == "space"
       @transition ->
         dispatch\reset Title!
 
@@ -147,7 +147,7 @@ class Game
 
     @world = w @, @player
 
-  onload: =>
+  on_show: =>
     sfx\play_music "xmoon"
 
   draw: =>
@@ -162,7 +162,7 @@ class Game
     reloader\update! if reloader
     return if @paused
 
-    if mouse.isDown "l"
+    if mouse.isDown 1
       @player\shoot!
 
     @world\update dt
@@ -198,7 +198,7 @@ class Game
 
   mousepressed: (x,y, btn) =>
     x, y = @world.viewport\unproject x,y
-    if btn == "r" and keyboard.isDown "f2"
+    if btn == 2 and keyboard.isDown "f2"
       @world.entities\add Energy x,y
 
     -- @world.particles\add EnergyEmitter @world, x,y
@@ -206,11 +206,11 @@ class Game
     -- @world.particles\add Explosion @world, x,y
 
 load_font = (img, chars)->
-  font_image = imgfy img
-  g.newImageFont font_image.tex, chars
+  with g.newImageFont img, chars
+    \setFilter "nearest", "nearest"
 
 love.load = ->
-  g.setBackgroundColor 61/2, 52/2, 47/2
+  g.setBackgroundColor 61/510, 52/510, 47/510
   g.setPointSize 12
   sprite = Spriter "img/sprite.png", 16
   fonts.main = load_font "img/font.png",
@@ -218,7 +218,7 @@ love.load = ->
 
   g.setFont fonts.main
 
-  export sfx = lovekit.audio.Audio "sounds"
+  export sfx = Audio "sounds"
   sfx\preload {
     "machine-gun"
     "hit1"

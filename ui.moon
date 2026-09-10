@@ -5,7 +5,7 @@
 export *
 
 class HorizBar
-  color: { 255, 128, 128, 128 }
+  color: { 1, 128/255, 128/255, 128/255 }
   border: true
   padding: 1
 
@@ -13,7 +13,7 @@ class HorizBar
 
   draw: (x, y) =>
     g.push!
-    g.setColor 255,255,255
+    g.setColor 1,1,1
 
     if @border
       g.setLineWidth 0.6
@@ -29,4 +29,4 @@ class HorizBar
       g.rectangle "fill", x, y, w, @h
 
     g.pop!
-    g.setColor 255,255,255,255
+    g.setColor 1,1,1,1

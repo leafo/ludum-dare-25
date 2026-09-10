@@ -39,7 +39,7 @@ box_text = (msg, x, y, center=true) ->
   else
     g.translate x, y - h/2
 
-  g.setColor 255,255,255
+  g.setColor 1,1,1
   g.rectangle "fill", 0,0,w,h
   g.setColor 0,0,0
   g.print msg, 0,0
