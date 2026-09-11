@@ -144,7 +144,7 @@ class Tutorial extends FadeOutScreen
       @draw_hud (w, h) ->
         box_text "Left Stick: Move", w / 2, h - 46
         box_text "Right Stick: Aim and Shoot", w / 2, h - 34
-        box_text "L1: Tractor Beam   X: Detonate", w / 2, h - 22
+        box_text "R1: Tractor Beam   X: Detonate", w / 2, h - 22
         box_text "Start: Pause   Select: Quit", w / 2, h - 10
 
   on_key: (key) =>

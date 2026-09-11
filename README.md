@@ -47,8 +47,7 @@ Gamepad:
 
 * Left Stick or D-Pad - Move
 * Right Stick - Aim and Shoot
-* R1 or Right Trigger - Shoot
-* L1 or Left Trigger - Tractor beam
+* R1 or Right Trigger - Tractor beam
 * X - Detonate bomb when it's charged
 * A - Advance through screens
 * Start - Pause

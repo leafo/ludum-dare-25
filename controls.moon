@@ -79,12 +79,11 @@ aim_vector = ->
   mouse_active = false if s
   s
 
-shooting = ->
-  return true if stick "rightx", "righty"
-  button("rightshoulder") or axis("triggerright") > 0.5
+-- the right stick both aims and shoots
+shooting = -> stick("rightx", "righty") != nil
 
 beam = ->
-  keyboard.isDown("space") or button("leftshoulder") or axis("triggerleft") > 0.5
+  keyboard.isDown("space") or button("rightshoulder") or axis("triggerright") > 0.5
 
 -- the mouse aims until the right stick takes over
 mouse_moved = -> mouse_active = true
