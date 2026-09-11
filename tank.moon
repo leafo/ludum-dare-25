@@ -166,7 +166,8 @@ class Player extends Tank
         @move dt, dir
 
     if aim = controls.aim_vector!
-      @aim_to dt, Vec2d(@x, @y) + aim
+      -- push the target far out so the offset gun mounts all aim the same way
+      @aim_to dt, Vec2d(@x, @y) + aim * 1000
     elseif controls.mouse_aims!
       @aim_to dt, Vec2d world.viewport\unproject mouse.getPosition!
 
