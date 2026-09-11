@@ -33,6 +33,8 @@ Includes:
 
 ### Controls
 
+Keyboard and mouse:
+
 * W A S D - Move 
 * Mouse - Aim and Shoot 
 * E - Detonate bomb when it's charged 
@@ -40,6 +42,30 @@ Includes:
 
 Press Enter to advance through screens. Press F1 to disable shaders during
 game. F3 to toggle fps during game. 
+
+Gamepad:
+
+* Left Stick or D-Pad - Move
+* Right Stick - Aim and Shoot
+* R1 or Right Trigger - Shoot
+* L1 or Left Trigger - Tractor beam
+* X - Detonate bomb when it's charged
+* A - Advance through screens
+* Start - Pause
+* Select - Quit
+
+The mouse aims until the right stick is moved, and takes over again when the
+mouse moves. Controllers are recognized through `gamecontrollerdb.txt`. If a
+joystick has no mapping, its raw axis and button values are shown on the title
+screen so a mapping line can be written for it.
+
+### Running
+
+    make run    # desktop window
+    make run43  # 640x480, matches 4:3 handhelds like the RG35XX
+
+Both compile the MoonScript sources first. The window size can also be forced
+with `love . --window 640x480` or the `XMOON_WINDOW` environment variable.
 
 ## About
 

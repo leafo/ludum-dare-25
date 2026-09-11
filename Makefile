@@ -1,4 +1,4 @@
-.PHONY: build deploy clean
+.PHONY: build run run43 deploy clean
 
 LOVE_VERSION = 11.5
 LOVE_FILE = x-moon-love$(LOVE_VERSION).love
@@ -7,6 +7,13 @@ USER_VERSION = love$(LOVE_VERSION)-$(shell git rev-parse --short HEAD)
 
 build:
 	moonc *.moon lovekit/*.moon
+
+run: build
+	love .
+
+# 4:3 handheld resolution (RG35XX)
+run43: build
+	love . --window 640x480
 
 $(LOVE_FILE): build
 	rm -f $(LOVE_FILE)
