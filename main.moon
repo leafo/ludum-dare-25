@@ -24,8 +24,9 @@ export fonts = {}
 export sprite, dispatch, sfx
 
 -- world pixels are scaled by WORLD_SCALE, HUD text by HUD_SCALE
--- 800x450 desktop gets a 267x150 view at 3x, 640x480 handheld a 320x240 view at 2x
-export WORLD_SCALE, HUD_SCALE
+-- 800x450 desktop gets a 267x150 view, 640x480 handheld a 213x160 view
+-- title and tutorial art is drawn for 800x450 at 3x, MENU_SCALE stretches it to fit other windows
+export WORLD_SCALE, HUD_SCALE, MENU_SCALE
 
 p = (str, ...) -> g.print str\lower!, ...
 
@@ -42,6 +43,19 @@ class FadeOutScreen
     @colors = ColorSeparate!
 
   draw_inner: =>
+
+  -- run fn with the HUD's integer scale so text stays crisp when the screen's
+  -- own scale is fractional. fn gets the HUD size, and to_hud converts a point
+  -- in this screen's viewport into HUD coordinates snapped to whole pixels
+  draw_hud: (fn) =>
+    g.push!
+    g.translate @viewport.x, @viewport.y
+    g.scale HUD_SCALE / @scale!
+    to_hud = (x, y) ->
+      f = @scale! / HUD_SCALE
+      math.floor((x - @viewport.x) * f + 0.5), math.floor((y - @viewport.y) * f + 0.5)
+    fn g.getWidth! / HUD_SCALE, g.getHeight! / HUD_SCALE, to_hud
+    g.pop!
 
   update: (dt) =>
     @seq\update dt if @seq
@@ -69,6 +83,8 @@ class FadeOutScreen
     @transition -> dispatch\push state
 
 class Title extends FadeOutScreen
+  scale: => MENU_SCALE
+
   new: (...) =>
     @title_image = imgfy "img/title.png"
     super ...
@@ -80,13 +96,15 @@ class Title extends FadeOutScreen
   draw_inner: =>
     cx, cy = @viewport\center!
     @title_image\draw_center cx, cy
-    box_text "Press #{controls.prompts.confirm!} To Begin", cx, cy - 10
 
-    -- a joystick without a gamepad mapping needs the raw values to write one
-    lines = controls.debug_lines!
-    if #lines > 3 and lines[3]\match "false"
-      for i, line in ipairs lines
-        box_text line, 4, 6 + i * 10, false
+    @draw_hud (w, h, to_hud) ->
+      box_text "Press #{controls.prompts.confirm!} To Begin", to_hud cx, cy - 10
+
+      -- a joystick without a gamepad mapping needs the raw values to write one
+      lines = controls.debug_lines!
+      if #lines > 3 and lines[3]\match "false"
+        for i, line in ipairs lines
+          box_text line, 4, 6 + i * 10, false
 
   on_key: (key) =>
     if key == "return" or key == "space"
@@ -94,7 +112,7 @@ class Title extends FadeOutScreen
 
 class Tutorial extends FadeOutScreen
   base_factor: 300
-  scale: => WORLD_SCALE / 2
+  scale: => MENU_SCALE / 2
 
   new: (...) =>
     @tut_image = imgfy "img/tutorial.png"
@@ -106,15 +124,11 @@ class Tutorial extends FadeOutScreen
 
     if controls.has_pad!
       -- the image scale is too small for text, draw the hint at HUD scale
-      g.push!
-      g.translate @viewport.x, @viewport.y
-      g.scale HUD_SCALE / @scale!
-      w, h = g.getWidth! / HUD_SCALE, g.getHeight! / HUD_SCALE
-      box_text "Left Stick: Move", w / 2, h - 46
-      box_text "Right Stick: Aim and Shoot", w / 2, h - 34
-      box_text "L1: Tractor Beam   X: Detonate", w / 2, h - 22
-      box_text "Start: Pause   Select: Quit", w / 2, h - 10
-      g.pop!
+      @draw_hud (w, h) ->
+        box_text "Left Stick: Move", w / 2, h - 46
+        box_text "Right Stick: Aim and Shoot", w / 2, h - 34
+        box_text "L1: Tractor Beam   X: Detonate", w / 2, h - 22
+        box_text "Start: Pause   Select: Quit", w / 2, h - 10
 
   on_key: (key) =>
     if key == "return" or key == "space"
@@ -262,8 +276,10 @@ love.load = (args) ->
   open_window args
   g.setBackgroundColor 61/510, 52/510, 47/510
 
-  WORLD_SCALE = if g.getHeight! >= 450 and g.getWidth! >= 800 then 3 else 2
+  WORLD_SCALE = 3
   HUD_SCALE = 3
+  -- fill the window with the 267x150 title art, letterboxing the leftover axis
+  MENU_SCALE = math.min g.getWidth! / 267, g.getHeight! / 150
 
   if love.filesystem.getInfo "gamecontrollerdb.txt"
     love.joystick.loadGamepadMappings "gamecontrollerdb.txt"

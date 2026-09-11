@@ -41,6 +41,7 @@ class Projector
   shader: -> [[
     extern number R;
     extern number yscale;
+    extern number lat_scale;
 
     float PI = 3.14159265358979323846264;
     vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
@@ -71,7 +72,7 @@ class Projector
         )
       );
 
-      lat *= 1.8;
+      lat *= lat_scale;
       _long *= 0.8;
 
       vec2 source = (vec2(_long, lat) / PI * 2.0 + 1.0) / 2.0;
@@ -87,6 +88,11 @@ class Projector
   new: (@radius=1.2) =>
     -- the planet is an ellipse in screen space, squash y so it stays round on any aspect
     @yscale = 1.48 * g.getHeight! / g.getWidth!
+    -- 1.8 was tuned for 16:9 where the screen edge cuts the sphere before the
+    -- canvas edge. on taller aspects the top of the screen would sample past the
+    -- canvas and smear its last row, so cap the gain to land on the edge instead.
+    -- measured against the ground radius so every projector shares the same gain
+    @lat_scale = math.min 1.8, math.pi / (2 * math.asin math.min 1, @yscale / 1.2)
     @canvas = g.newCanvas!
     @canvas\setFilter "nearest", "nearest"
     @effect = g.newShader @shader!
@@ -103,6 +109,7 @@ class Projector
     g.setShader @effect unless @disabled
     @effect\send "R", @radius
     @effect\send "yscale", @yscale
+    @effect\send "lat_scale", @lat_scale
     g.draw @canvas, 0,0
     g.setShader!
     g.setBlendMode "alpha"
