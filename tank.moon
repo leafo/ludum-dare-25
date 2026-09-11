@@ -5,6 +5,7 @@ effects = require "lovekit.effects"
 {:sin, :cos, :min} = math
 
 import approach_dir from require "util"
+controls = require "controls"
 
 export *
 
@@ -120,8 +121,6 @@ class Tank
 
 class Player extends Tank
   suck_radius: 50
-  mover = make_mover "w", "s", "a", "d"
-
   score: 0
   display_score: 0
 
@@ -162,14 +161,16 @@ class Player extends Tank
     super dt
 
     unless @hit_seq
-      dir = mover!
+      dir = controls.move_vector!
       if not dir\is_zero!
         @move dt, dir
 
-    mpos = Vec2d world.viewport\unproject mouse.getPosition!
-    @aim_to dt, mpos
+    if aim = controls.aim_vector!
+      @aim_to dt, Vec2d(@x, @y) + aim
+    elseif controls.mouse_aims!
+      @aim_to dt, Vec2d world.viewport\unproject mouse.getPosition!
 
-    if @sucking = keyboard.isDown "space"
+    if @sucking = controls.beam!
       radius = @suck_radius_box!
       for e in *world.collide\get_touching radius
         if e.is_energy and e.alive and not e.gravity_parent

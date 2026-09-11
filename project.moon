@@ -40,21 +40,22 @@ class Glow
 class Projector
   shader: -> [[
     extern number R;
+    extern number yscale;
 
     float PI = 3.14159265358979323846264;
     vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
-      vec2 pos = (st - 0.5) * 2;
+      vec2 pos = (st - 0.5) * 2.0;
       pos.x = pos.x * 1.4;
-      pos.y = pos.y / 1.2;
+      pos.y = pos.y * yscale;
 
       // float R = 1.2;
 
       if (length(pos) > R) {
-        return vec4(0);
+        return vec4(0.0);
       }
 
-      float long_0 = 0;
-      float lat_0 = 0;
+      float long_0 = 0.0;
+      float lat_0 = 0.0;
 
       float P = length(pos);
       float C = asin(P/R);
@@ -73,10 +74,10 @@ class Projector
       lat *= 1.8;
       _long *= 0.8;
 
-      vec2 source = (vec2(_long, lat) / PI * 2 + 1) / 2;
+      vec2 source = (vec2(_long, lat) / PI * 2.0 + 1.0) / 2.0;
 
 
-      float darken = min(1, 1.1 - pow(length(pos) / R, 5));
+      float darken = min(1.0, 1.1 - pow(length(pos) / R, 5.0));
 
       vec4 final = Texel(tex, source);
       return vec4(final.rgb * darken, final.a);
@@ -84,6 +85,8 @@ class Projector
   ]]
 
   new: (@radius=1.2) =>
+    -- the planet is an ellipse in screen space, squash y so it stays round on any aspect
+    @yscale = 1.48 * g.getHeight! / g.getWidth!
     @canvas = g.newCanvas!
     @canvas\setFilter "nearest", "nearest"
     @effect = g.newShader @shader!
@@ -99,6 +102,7 @@ class Projector
     g.setBlendMode "alpha", "premultiplied"
     g.setShader @effect unless @disabled
     @effect\send "R", @radius
+    @effect\send "yscale", @yscale
     g.draw @canvas, 0,0
     g.setShader!
     g.setBlendMode "alpha"
@@ -110,7 +114,7 @@ class ColorSeparate
 
     vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
       // return Texel(tex, st);
-      float dist = length((st - 0.5) * 2);
+      float dist = length((st - 0.5) * 2.0);
 
       if (dist < 0.5) {
         return Texel(tex, st);
@@ -132,7 +136,6 @@ class ColorSeparate
   new: (@factor=50) =>
     @canvas = g.newCanvas!
     @canvas\setFilter "nearest", "nearest"
-    @canvas\setWrap "repeat", "repeat"
     @effect = g.newShader @shader!
 
   render: (fn) =>

@@ -3,6 +3,9 @@
 {floor: f, min: _min, max: _max, :cos, :sin, :abs, :random} = math
 
 import box_text from require "util"
+controls = require "controls"
+
+MARKER_SIZE = 12
 
 export *
 
@@ -38,7 +41,7 @@ class World
   bg_tiles: { {1, 0} }
 
   new: (@game, @player) =>
-    @viewport = EffectViewport scale: 3
+    @viewport = EffectViewport scale: WORLD_SCALE
     @player.world = @
     @player\reset!
 
@@ -135,16 +138,18 @@ class World
       vec[2] = -0.8 if vec[2] < -0.8
 
       g.setColor rr,gg,bb, aa
-      g.points unpack vec
+      -- a marker MARKER_SIZE px square, undoing the non-uniform scale above
+      mw, mh = MARKER_SIZE / (w/2 * 0.9), MARKER_SIZE / (h/2 * 1.2)
+      g.rectangle "fill", vec[1] - mw/2, vec[2] - mh/2, mw, mh
 
     g.setColor 1,1,1,1
     g.pop!
 
     g.push!
-    g.scale @viewport.scale
+    g.scale HUD_SCALE
 
-    w = w/3
-    h = h/3
+    w = w/HUD_SCALE
+    h = h/HUD_SCALE
 
     box_text "Energy: #{@energy_count or 0}", 10, 10, false
 
@@ -155,7 +160,7 @@ class World
     @health_bar\draw (w - @health_bar.w)/2, h - @health_bar.h - 8
 
     if @energy_count >= @energy_needed and timer.getTime! % 1 >= 0.5
-      box_text "Press E", w - 10, 20, 1.0
+      box_text "Press #{controls.prompts.detonate!}", w - 10, 20, 1.0
 
     g.pop!
 

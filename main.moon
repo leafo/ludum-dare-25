@@ -18,9 +18,14 @@ require "lovekit.screen_snap"
 {floor: f, min: _min, :cos, :sin, :abs} = math
 
 import box_text from require "util"
+controls = require "controls"
 
 export fonts = {}
 export sprite, dispatch, sfx
+
+-- world pixels are scaled by WORLD_SCALE, HUD text by HUD_SCALE
+-- 800x450 desktop gets a 267x150 view at 3x, 640x480 handheld a 320x240 view at 2x
+export WORLD_SCALE, HUD_SCALE
 
 p = (str, ...) -> g.print str\lower!, ...
 
@@ -28,10 +33,11 @@ local snapper
 local Game, Tutorial, Title
 
 class FadeOutScreen
-  scale: 3
   base_factor: 75
+  scale: => WORLD_SCALE
+
   new: =>
-    @viewport = EffectViewport scale: @scale
+    @viewport = EffectViewport scale: @scale!
     @shroud_alpha = 0
     @colors = ColorSeparate!
 
@@ -72,24 +78,43 @@ class Title extends FadeOutScreen
     sfx\play_music "xmoon-title"
 
   draw_inner: =>
-    @title_image\draw 0,0
     cx, cy = @viewport\center!
-    box_text "Press Enter To Begin", cx, cy - 10
+    @title_image\draw_center cx, cy
+    box_text "Press #{controls.prompts.confirm!} To Begin", cx, cy - 10
+
+    -- a joystick without a gamepad mapping needs the raw values to write one
+    lines = controls.debug_lines!
+    if #lines > 3 and lines[3]\match "false"
+      for i, line in ipairs lines
+        box_text line, 4, 6 + i * 10, false
 
   on_key: (key) =>
     if key == "return" or key == "space"
       @transition_to Tutorial!
 
 class Tutorial extends FadeOutScreen
-  scale: 1.5
   base_factor: 300
+  scale: => WORLD_SCALE / 2
 
   new: (...) =>
     @tut_image = imgfy "img/tutorial.png"
     super ...
 
   draw_inner: =>
-    @tut_image\draw 0,0
+    cx, cy = @viewport\center!
+    @tut_image\draw_center cx, cy
+
+    if controls.has_pad!
+      -- the image scale is too small for text, draw the hint at HUD scale
+      g.push!
+      g.translate @viewport.x, @viewport.y
+      g.scale HUD_SCALE / @scale!
+      w, h = g.getWidth! / HUD_SCALE, g.getHeight! / HUD_SCALE
+      box_text "Left Stick: Move", w / 2, h - 46
+      box_text "Right Stick: Aim and Shoot", w / 2, h - 34
+      box_text "L1: Tractor Beam   X: Detonate", w / 2, h - 22
+      box_text "Start: Pause   Select: Quit", w / 2, h - 10
+      g.pop!
 
   on_key: (key) =>
     if key == "return" or key == "space"
@@ -102,7 +127,7 @@ class Intermission extends FadeOutScreen
   draw_inner: =>
     cx, cy = @viewport\center!
     box_text "You Beat Level #{@game.current_level}", cx, cy - 10
-    box_text "Press Enter To Go To Next Level", cx, cy + 10
+    box_text "Press #{controls.prompts.confirm!} To Go To Next Level", cx, cy + 10
 
   on_key: (key) =>
     if key == "return" or key == "space"
@@ -117,7 +142,7 @@ class GameOver extends FadeOutScreen
     box_text "Game Over", cx, cy - 10
     box_text "Score: #{@player.score} - Level: #{@game.current_level}", cx, cy + 10
 
-    box_text "Press Enter To Return To Title", cx, cy + 30
+    box_text "Press #{controls.prompts.confirm!} To Return To Title", cx, cy + 30
 
   on_key: (key) =>
     if key == "return" or key == "space"
@@ -153,7 +178,7 @@ class Game
   draw: =>
     @world\draw!
     if @show_fps
-      g.scale 2
+      g.scale HUD_SCALE
       p tostring(timer.getFPS!), 2, 50
 
   update: (dt) =>
@@ -162,7 +187,7 @@ class Game
     reloader\update! if reloader
     return if @paused
 
-    if mouse.isDown 1
+    if mouse.isDown(1) or controls.shooting!
       @player\shoot!
 
     @world\update dt
@@ -209,9 +234,41 @@ load_font = (img, chars)->
   with g.newImageFont img, chars
     \setFilter "nearest", "nearest"
 
-love.load = ->
+-- windowed at the native design size, fullscreen on displays too small for it
+-- (the RG35XX is 640x480)
+-- `love . --window 640x480` or XMOON_WINDOW=640x480 forces a windowed size for testing
+open_window = (args={}) ->
+  size = os.getenv "XMOON_WINDOW"
+  for i, arg in ipairs args
+    size = args[i + 1] if arg == "--window"
+
+  if size
+    w, h = size\match "^(%d+)x(%d+)$"
+    error "bad --window size, expected WxH: #{size}" unless w
+    love.window.setMode tonumber(w), tonumber(h)
+    love.window.setTitle "X-Moon by leafo - Ludum Dare 25"
+    return
+
+  dw, dh = love.window.getDesktopDimensions!
+  if dw < 800 or dh < 450
+    love.window.setMode 0, 0, fullscreen: true, fullscreentype: "desktop"
+    mouse.setVisible false
+  else
+    love.window.setMode 800, 450
+
+  love.window.setTitle "X-Moon by leafo - Ludum Dare 25"
+
+love.load = (args) ->
+  open_window args
   g.setBackgroundColor 61/510, 52/510, 47/510
-  g.setPointSize 12
+
+  WORLD_SCALE = if g.getHeight! >= 450 and g.getWidth! >= 800 then 3 else 2
+  HUD_SCALE = 3
+
+  if love.filesystem.getInfo "gamecontrollerdb.txt"
+    love.joystick.loadGamepadMappings "gamecontrollerdb.txt"
+
+  controls.update_pad!
   sprite = Spriter "img/sprite.png", 16
   fonts.main = load_font "img/font.png",
     [[ abcdefghijklmnopqrstuvwxyz-1234567890!.,:;'"?$&]]
@@ -230,4 +287,16 @@ love.load = ->
 
   dispatch = Dispatcher Title!
   dispatch\bind love
+
+  love.joystickadded = controls.update_pad
+  love.joystickremoved = controls.update_pad
+
+  love.gamepadpressed = (joy, btn) ->
+    if key = controls.button_key btn
+      dispatch\keypressed key
+
+  dispatch_mousemoved = love.mousemoved
+  love.mousemoved = (...) ->
+    controls.mouse_moved!
+    dispatch_mousemoved ...
 
