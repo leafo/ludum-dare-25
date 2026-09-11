@@ -52,7 +52,7 @@ Gamepad:
 * X - Detonate bomb when it's charged
 * A - Advance through screens
 * Start - Pause
-* Select - Quit
+* Hold Select - Menu: A to quit, X to toggle the fps counter
 
 The mouse aims until the right stick is moved, and takes over again when the
 mouse moves. Controllers are recognized through `gamecontrollerdb.txt`. If a

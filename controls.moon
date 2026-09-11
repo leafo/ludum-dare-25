@@ -7,7 +7,6 @@ DEADZONE = 0.25
 BUTTON_KEYS = {
   a: "return"
   start: "p"
-  back: "escape"
   x: "e"
 }
 
@@ -93,6 +92,9 @@ mouse_aims = -> mouse_active
 
 button_key = (btn) -> BUTTON_KEYS[btn]
 
+-- holding select shows a menu where the face buttons run actions instead
+menu_open = -> button "back"
+
 has_pad = -> pad != nil
 
 prompts = {
@@ -126,5 +128,6 @@ debug_lines = ->
 
 {
   :update_pad, :move_vector, :aim_vector, :shooting, :beam
-  :mouse_moved, :mouse_aims, :button_key, :has_pad, :prompts, :debug_lines
+  :mouse_moved, :mouse_aims, :button_key, :menu_open, :has_pad, :prompts
+  :debug_lines
 }

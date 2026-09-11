@@ -309,9 +309,43 @@ love.load = (args) ->
   love.joystickadded = controls.update_pad
   love.joystickremoved = controls.update_pad
 
+  -- there's no keyboard on the handheld, so holding select turns the face
+  -- buttons into these while an overlay lists them
+  menu_actions = {
+    {"a", "Quit", -> love.event.push "quit"}
+    {"x", "Toggle FPS", -> dispatch\keypressed "f3"}
+    {"y", "Toggle Shaders", -> dispatch\keypressed "f1"}
+    {"b", "Toggle Lighting", -> dispatch\keypressed "f4"}
+  }
+
   love.gamepadpressed = (joy, btn) ->
+    if controls.menu_open!
+      for {menu_btn, _, fn} in *menu_actions
+        fn! if menu_btn == btn
+      return
+
     if key = controls.button_key btn
       dispatch\keypressed key
+
+  dispatch_draw = love.draw
+  love.draw = ->
+    dispatch_draw!
+    return unless controls.menu_open!
+
+    g.push!
+    g.origin!
+    g.scale HUD_SCALE
+    w, h = g.getWidth! / HUD_SCALE, g.getHeight! / HUD_SCALE
+    g.setColor 0,0,0, 0.6
+    g.rectangle "fill", 0, 0, w, h
+
+    line_h = 12
+    y = h / 2 - (#menu_actions * line_h) / 2 + line_h / 2
+    for {menu_btn, label} in *menu_actions
+      box_text "#{menu_btn\upper!}: #{label}", w / 2, y
+      y += line_h
+    g.setColor 1,1,1
+    g.pop!
 
   dispatch_mousemoved = love.mousemoved
   love.mousemoved = (...) ->
