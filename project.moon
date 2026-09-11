@@ -38,10 +38,15 @@ class Glow
 
 
 class Projector
+  -- preview toggle for the lit sphere look, see Game keypressed
+  @lit: true
+
   shader: -> [[
     extern number R;
     extern number yscale;
     extern number lat_scale;
+    extern number lit;    // 1 = directional lighting, 0 = the original rim darken
+    extern number edge_w; // width of one screen pixel in pos units, for the rim AA
 
     float PI = 3.14159265358979323846264;
     vec4 effect(vec4 color, sampler2D tex, vec2 st, vec2 pixel_coords) {
@@ -51,14 +56,14 @@ class Projector
 
       // float R = 1.2;
 
-      if (length(pos) > R) {
+      float P = length(pos);
+      if (P > R) {
         return vec4(0.0);
       }
 
       float long_0 = 0.0;
       float lat_0 = 0.0;
 
-      float P = length(pos);
       float C = asin(P/R);
 
       float _long = long_0 + atan(
@@ -78,10 +83,28 @@ class Projector
       vec2 source = (vec2(_long, lat) / PI * 2.0 + 1.0) / 2.0;
 
 
-      float darken = min(1.0, 1.1 - pow(length(pos) / R, 5.0));
-
       vec4 final = Texel(tex, source);
-      return vec4(final.rgb * darken, final.a);
+
+      if (lit < 0.5) {
+        float darken = min(1.0, 1.1 - pow(P / R, 5.0));
+        return vec4(final.rgb * darken, final.a);
+      }
+
+      // the surface normal is the sphere point itself
+      vec3 n = vec3(pos / R, cos(C));
+      vec3 light = normalize(vec3(-0.5, -0.6, 0.7));
+      float lambert = max(0.0, dot(n, light));
+      float shade = 0.3 + 0.7 * lambert;
+      // keep true colors around the player, let the shading fade in toward the rim
+      shade = mix(1.0, shade, smoothstep(0.15, 1.0, P / R));
+      // faint light wrapping around the far edge, premultiplied by alpha
+      float rim = 0.25 * pow(1.0 - n.z, 3.0) * final.a;
+
+      // soften the silhouette over one pixel
+      float edge = 1.0 - smoothstep(R - edge_w, R, P);
+
+      vec3 rgb = final.rgb * shade + vec3(rim);
+      return vec4(rgb, final.a) * edge;
     }
   ]]
 
@@ -93,8 +116,8 @@ class Projector
     -- canvas and smear its last row, so cap the gain to land on the edge instead.
     -- measured against the ground radius so every projector shares the same gain
     @lat_scale = math.min 1.8, math.pi / (2 * math.asin math.min 1, @yscale / 1.2)
+    @edge_w = 2 * math.max 1.4 / g.getWidth!, @yscale / g.getHeight!
     @canvas = g.newCanvas!
-    @canvas\setFilter "nearest", "nearest"
     @effect = g.newShader @shader!
 
   render: (fn) =>
@@ -105,11 +128,19 @@ class Projector
     fn!
     setCanvas old_canvas
 
+    -- linear filtering calms the shimmer where the rim squeezes many canvas
+    -- pixels into one, nearest keeps the original look for comparison
+    lit = @@lit
+    filter = if lit then "linear" else "nearest"
+    @canvas\setFilter filter, filter
+
     g.setBlendMode "alpha", "premultiplied"
     g.setShader @effect unless @disabled
     @effect\send "R", @radius
     @effect\send "yscale", @yscale
     @effect\send "lat_scale", @lat_scale
+    @effect\send "lit", lit and 1 or 0
+    @effect\send "edge_w", @edge_w
     g.draw @canvas, 0,0
     g.setShader!
     g.setBlendMode "alpha"

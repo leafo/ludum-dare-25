@@ -233,6 +233,8 @@ class Game
           .disable_project = not .disable_project
         when "f3"
           @show_fps = not @show_fps
+        when "f4"
+          Projector.lit = not Projector.lit
     false
 
   mousepressed: (x,y, btn) =>
