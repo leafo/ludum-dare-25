@@ -30,6 +30,23 @@ export WORLD_SCALE, HUD_SCALE, MENU_SCALE
 
 p = (str, ...) -> g.print str\lower!, ...
 
+-- dim the screen and center the lines of text at HUD scale
+draw_overlay = (lines) ->
+  g.push!
+  g.origin!
+  g.scale HUD_SCALE
+  w, h = g.getWidth! / HUD_SCALE, g.getHeight! / HUD_SCALE
+  g.setColor 0,0,0, 0.6
+  g.rectangle "fill", 0, 0, w, h
+
+  line_h = 12
+  y = h / 2 - (#lines * line_h) / 2 + line_h / 2
+  for line in *lines
+    box_text line, w / 2, y
+    y += line_h
+  g.setColor 1,1,1
+  g.pop!
+
 local snapper
 local Game, Tutorial, Title
 
@@ -195,6 +212,9 @@ class Game
       g.scale HUD_SCALE
       p tostring(timer.getFPS!), 2, 50
 
+    if @paused
+      draw_overlay { "Paused", "Press #{controls.prompts.pause!} to resume" }
+
   update: (dt) =>
     return if dt > 0.5
 
@@ -330,22 +350,8 @@ love.load = (args) ->
   dispatch_draw = love.draw
   love.draw = ->
     dispatch_draw!
-    return unless controls.menu_open!
-
-    g.push!
-    g.origin!
-    g.scale HUD_SCALE
-    w, h = g.getWidth! / HUD_SCALE, g.getHeight! / HUD_SCALE
-    g.setColor 0,0,0, 0.6
-    g.rectangle "fill", 0, 0, w, h
-
-    line_h = 12
-    y = h / 2 - (#menu_actions * line_h) / 2 + line_h / 2
-    for {menu_btn, label} in *menu_actions
-      box_text "#{menu_btn\upper!}: #{label}", w / 2, y
-      y += line_h
-    g.setColor 1,1,1
-    g.pop!
+    if controls.menu_open!
+      draw_overlay ["#{btn\upper!}: #{label}" for {btn, label} in *menu_actions]
 
   dispatch_mousemoved = love.mousemoved
   love.mousemoved = (...) ->

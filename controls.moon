@@ -100,6 +100,7 @@ has_pad = -> pad != nil
 prompts = {
   confirm: -> if pad then "A" else "Enter"
   detonate: -> if pad then "X" else "E"
+  pause: -> if pad then "Start" else "P"
 }
 
 -- raw state for building a gamepad mapping on a device without one
