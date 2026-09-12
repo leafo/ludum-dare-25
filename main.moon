@@ -249,6 +249,8 @@ class Game
           @show_fps = not @show_fps
         when "f4"
           Projector.lit = not Projector.lit
+        when "f5"
+          Projector.azimuthal = not Projector.azimuthal
     false
 
   mousepressed: (x,y, btn) =>
@@ -326,7 +328,7 @@ love.load = (args) ->
     {"a", "Quit", -> love.event.push "quit"}
     {"x", "Toggle FPS", -> dispatch\keypressed "f3"}
     {"y", "Toggle Shaders", -> dispatch\keypressed "f1"}
-    {"b", "Toggle Lighting", -> dispatch\keypressed "f4"}
+    {"b", "Toggle Projection", -> dispatch\keypressed "f5"}
   }
 
   love.gamepadpressed = (joy, btn) ->
