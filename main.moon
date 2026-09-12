@@ -117,12 +117,6 @@ class Title extends FadeOutScreen
     @draw_hud (w, h, to_hud) ->
       box_text "Press #{controls.prompts.confirm!} To Begin", to_hud cx, cy - 10
 
-      -- a joystick without a gamepad mapping needs the raw values to write one
-      lines = controls.debug_lines!
-      if #lines > 3 and lines[3]\match "false"
-        for i, line in ipairs lines
-          box_text line, 4, 6 + i * 10, false
-
   on_key: (key) =>
     if key == "return" or key == "space"
       @transition_to Tutorial!
@@ -302,9 +296,6 @@ love.load = (args) ->
   HUD_SCALE = 3
   -- fill the window with the 267x150 title art, letterboxing the leftover axis
   MENU_SCALE = math.min g.getWidth! / 267, g.getHeight! / 150
-
-  if love.filesystem.getInfo "gamecontrollerdb.txt"
-    love.joystick.loadGamepadMappings "gamecontrollerdb.txt"
 
   controls.update_pad!
   sprite = Spriter "img/sprite.png", 16

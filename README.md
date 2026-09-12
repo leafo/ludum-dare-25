@@ -54,9 +54,7 @@ Gamepad:
 * Hold Select - Menu: A to quit, X to toggle the fps counter
 
 The mouse aims until the right stick is moved, and takes over again when the
-mouse moves. Controllers are recognized through `gamecontrollerdb.txt`. If a
-joystick has no mapping, its raw axis and button values are shown on the title
-screen so a mapping line can be written for it.
+mouse moves.
 
 ### Running
 
