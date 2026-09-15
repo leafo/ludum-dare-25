@@ -41,7 +41,7 @@ class World
   bg_tiles: { {1, 0} }
 
   new: (@game, @player) =>
-    @viewport = EffectViewport scale: WORLD_SCALE
+    @viewport = EffectViewport scale: WORLD_SCALE, snap: true
     @player.world = @
     @player\reset!
 
