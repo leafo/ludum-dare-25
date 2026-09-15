@@ -18,6 +18,7 @@ require "lovekit.screen_snap"
 {floor: f, min: _min, :cos, :sin, :abs} = math
 
 import box_text from require "util"
+import Screen from require "screen"
 controls = require "controls"
 
 export fonts = {}
@@ -25,6 +26,7 @@ export sprite, dispatch, sfx
 
 -- world pixels are scaled by WORLD_SCALE, HUD text by HUD_SCALE
 -- 800x450 desktop gets a 267x150 view, 640x480 handheld a 213x160 view
+-- windows taller than 480 are drawn at 640x480 density and scaled up, see screen.moon
 -- title and tutorial art is drawn for 800x450 at 3x, MENU_SCALE stretches it to fit other windows
 export WORLD_SCALE, HUD_SCALE, MENU_SCALE
 
@@ -47,7 +49,7 @@ draw_overlay = (lines) ->
   g.setColor 1,1,1
   g.pop!
 
-local snapper
+local snapper, screen
 local Game, Tutorial, Title
 
 class FadeOutScreen
@@ -292,6 +294,7 @@ open_window = (args={}) ->
 
 love.load = (args) ->
   open_window args
+  screen = Screen!
   g.setBackgroundColor 61/510, 52/510, 47/510
 
   WORLD_SCALE = 3
@@ -329,7 +332,14 @@ love.load = (args) ->
     {"x", "Toggle FPS", -> dispatch\keypressed "f3"}
     {"y", "Toggle Shaders", -> dispatch\keypressed "f1"}
     {"b", "Toggle Projection", -> dispatch\keypressed "f5"}
+    -- only differs on screens taller than 480, where the canvas is scaled up
+    {"leftshoulder", (-> "Upscale: #{screen.sharp and "Sharp" or "Nearest"}"), -> screen\toggle_sharp!}
   }
+
+  button_names = { leftshoulder: "L1" }
+  menu_line = (btn, label) ->
+    label = label! if type(label) == "function"
+    "#{button_names[btn] or btn\upper!}: #{label}"
 
   love.gamepadpressed = (joy, btn) ->
     if controls.menu_open!
@@ -342,12 +352,19 @@ love.load = (args) ->
 
   dispatch_draw = love.draw
   love.draw = ->
-    dispatch_draw!
-    if controls.menu_open!
-      draw_overlay ["#{btn\upper!}: #{label}" for {btn, label} in *menu_actions]
+    screen\draw ->
+      dispatch_draw!
+      if controls.menu_open!
+        draw_overlay [menu_line btn, label for {btn, label} in *menu_actions]
 
   dispatch_mousemoved = love.mousemoved
-  love.mousemoved = (...) ->
+  love.mousemoved = (x, y, ...) ->
     controls.mouse_moved!
-    dispatch_mousemoved ...
+    x, y = screen\to_canvas x, y
+    dispatch_mousemoved x, y, ...
+
+  dispatch_mousepressed = love.mousepressed
+  love.mousepressed = (x, y, ...) ->
+    x, y = screen\to_canvas x, y
+    dispatch_mousepressed x, y, ...
 

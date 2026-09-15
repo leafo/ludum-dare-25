@@ -150,7 +150,7 @@ class Projector
     @zoom = math.min (h / 2) / top_angle, (w / 2) / side_angle
     @az_edge_w = 2 * @pos_scale[2] / h
 
-    @canvas = g.newCanvas!
+    @canvas = g.newCanvas w, h
     @effect = g.newShader @shader!
     @az_effect = g.newShader @azimuthal_shader!
 
@@ -215,7 +215,7 @@ class ColorSeparate
   ]]
 
   new: (@factor=50) =>
-    @canvas = g.newCanvas!
+    @canvas = g.newCanvas g.getWidth!, g.getHeight!
     @canvas\setFilter "nearest", "nearest"
     @effect = g.newShader @shader!
 
