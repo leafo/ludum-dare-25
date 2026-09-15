@@ -19,6 +19,7 @@ require "lovekit.screen_snap"
 
 import box_text from require "util"
 import Screen from require "screen"
+import open_window from require "lovekit.window"
 controls = require "controls"
 
 export fonts = {}
@@ -268,32 +269,15 @@ load_font = (img, chars)->
   with g.newImageFont img, chars
     \setFilter "nearest", "nearest"
 
--- windowed at the native design size, fullscreen on displays too small for it
--- (the RG35XX is 640x480)
--- `love . --window 640x480` or XMOON_WINDOW=640x480 forces a windowed size for testing
-open_window = (args={}) ->
-  size = os.getenv "XMOON_WINDOW"
-  for i, arg in ipairs args
-    size = args[i + 1] if arg == "--window"
-
-  if size
-    w, h = size\match "^(%d+)x(%d+)$"
-    error "bad --window size, expected WxH: #{size}" unless w
-    love.window.setMode tonumber(w), tonumber(h)
-    love.window.setTitle "X-Moon by leafo - Ludum Dare 25"
-    return
-
-  dw, dh = love.window.getDesktopDimensions!
-  if dw < 800 or dh < 450
-    love.window.setMode 0, 0, fullscreen: true, fullscreentype: "desktop"
-    mouse.setVisible false
-  else
-    love.window.setMode 800, 450
-
-  love.window.setTitle "X-Moon by leafo - Ludum Dare 25"
-
 love.load = (args) ->
-  open_window args
+  open_window {
+    title: "X-Moon by leafo - Ludum Dare 25"
+    env: "XMOON_WINDOW"
+    :args
+    design_w: 800
+    design_h: 450
+  }
+
   screen = Screen!
   g.setBackgroundColor 61/510, 52/510, 47/510
 

@@ -1,9 +1,9 @@
 
 {graphics: g, :mouse} = love
 
--- the game is drawn at the 640x480 handheld's pixel density. on taller windows
--- it renders into a canvas BASE_HEIGHT tall, as wide as the window's aspect,
--- and that canvas is scaled up to fill the window. shorter windows draw directly
+-- the game is drawn at the 640x480 handheld's pixel density: taller windows
+-- render into a canvas BASE_HEIGHT tall, as wide as the window's aspect allows,
+-- then scale it up to fill the window
 BASE_HEIGHT = 480
 
 -- sharp bilinear: nearest inside each canvas pixel, blending only across the
@@ -42,8 +42,8 @@ class Screen
       \send "source_size", { @w, @h }
       \send "scale", @scale
 
-    -- everything that sizes itself from the screen sees the canvas instead.
-    -- g.newCanvas! with no size still reads the real window, so size canvases explicitly
+    -- so the world, HUD and menus size themselves to the canvas. g.newCanvas!
+    -- with no size still reads the real window, canvases must be sized explicitly
     g.getWidth = -> @w
     g.getHeight = -> @h
     g.getDimensions = -> @w, @h
